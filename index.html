@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva - The Point</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 600px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin: auto; }
+        h2 { color: #333; text-align: center; }
+        .campo { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-salvar { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        .btn-salvar:hover { background-color: #218838; }
+        .btn-extras { background-color: #007bff; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; margin-bottom: 10px; }
+        #secao-extras { display: none; background: #f9f9f9; padding: 10px; border: 1px dashed #ccc; margin-bottom: 15px; }
+        .alerta-janela { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 2px solid orange; padding: 20px; z-index: 1000; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.3); text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Nova Reserva - The Point</h2>
+    
+    <div class="campo">
+        <label>Apartamento *</label>
+        <select id="apto_id" required>
+            <option value="">Carregando apartamentos...</option>
+        </select>
+    </div>
+
+    <div class="campo">
+        <label>Hóspede Principal (Guest) *</label>
+        <input type="text" id="guest_principal" required>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <div class="campo" style="flex: 1;">
+            <label>Check-In *</label>
+            <input type="date" id="data_checkin" required>
+        </div>
+        <div class="campo" style="flex: 1;">
+            <label>Check-Out *</label>
+            <input type="date" id="data_checkout" required>
+        </div>
+    </div>
+
+    <div class="campo">
+        <label>Noites</label>
+        <input type="text" id="noites" readonly style="background: #eee;">
+    </div>
+
+    <div class="campo">
+        <label>Origem (Fonte) *</label>
+        <select id="origem" required>
+            <option value="Booking">Booking</option>
+            <option value="AirBnb">AirBnb</option>
+            <option value="VRBO">VRBO</option>
+            <option value="D">Direto (D)</option>
+            <option value="P">Pendente (P)</option>
+        </select>
+    </div>
+
+    <button type="button" class="btn-extras" onclick="toggleExtras()">+ Adicionar mais hóspedes / Infos Extras</button>
+
+    <div id="secao-extras">
+        <div class="campo"><label>Guest 2</label><input type="text" id="guest_2"></div>
+        <div class="campo"><label>Guest 3</label><input type="text" id="guest_3"></div>
+        <div class="campo"><label>Guest 4</label><input type="text" id="guest_4"></div>
+        <div class="campo"><label>Guest 5</label><input type="text" id="guest_5"></div>
+        <div class="campo"><label>Guest 6</label><input type="text" id="guest_6"></div>
+        <div style="display: flex; gap: 10px;">
+            <div class="campo"><label>Adultos</label><input type="number" id="num_adultos" value="1"></div>
+            <div class="campo"><label>Crianças</label><input type="number" id="num_criancas" value="0"></div>
+        </div>
+        <div class="campo"><label>Código Porta 1</label><input type="text" id="codigo_porta_1"></div>
+        <div class="campo"><label>Código Porta 2</label><input type="text" id="codigo_porta_2"></div>
+    </div>
+
+    <div class="campo">
+        <label>Valor Creditado (R$)</label>
+        <input type="number" step="0.01" id="valor_creditado">
+    </div>
+    
+    <div class="campo">
+        <label>OBS:</label>
+        <textarea id="observacoes"></textarea>
+    </div>
+
+    <button class="btn-salvar" onclick="processarReserva()">Salvar Reserva</button>
+</div>
+
+<div id="modalAlerta" class="alerta-janela">
+    <h3>⚠️ ATENÇÃO</h3>
+    <p id="msgAlerta"></p>
+    <button onclick="salvarFinal()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">Estou ciente / Continuar</button>
+    <button onclick="fecharAlerta()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">Cancelar</button>
+</div>
+
+<script>
+    const SB_URL = "https://eqoayyftpddombylgxpw.supabase.co";
+    const SB_KEY = "sb_publishable_52ePL6AdYLm58359gM4VJg_x5bfdamZ"; 
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+    let minNoitesAlerta = 4;
+
+    async function carregarAptos() {
+        const { data, error } = await supabaseClient.from('apartamentos').select('id, nome_apto').order('nome_apto');
+        if (data) {
+            const select = document.getElementById('apto_id');
+            select.innerHTML = '<option value="">Selecione o Apartamento</option>';
+            data.forEach(apto => {
+                select.innerHTML += `<option value="${apto.id}">${apto.nome_apto}</option>`;
+            });
+        }
+        const { data: config } = await supabaseClient.from('configuracoes').select('valor').eq('chave', 'minimo_noites_alerta').single();
+        if (config) minNoitesAlerta = config.valor;
+    }
+    carregarAptos();
+
+    document.getElementById('data_checkin').addEventListener('change', calcularNoites);
+    document.getElementById('data_checkout').addEventListener('change', calcularNoites);
+
+    function calcularNoites() {
+        const inVal = document.getElementById('data_checkin').value;
+        const outVal = document.getElementById('data_checkout').value;
+        if (inVal && outVal) {
+            const inDate = new Date(inVal);
+            const outDate = new Date(outVal);
+            if (outDate > inDate) {
+                const diffTime = Math.abs(outDate - inDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                document.getElementById('noites').value = diffDays;
+            }
+        }
+    }
+
+    function toggleExtras() {
+        const div = document.getElementById('secao-extras');
+        div.style.display = div.style.display === 'block' ? 'none' : 'block';
+    }
+
+    async function processarReserva() {
+        const apto = document.getElementById('apto_id').value;
+        const checkin = document.getElementById('data_checkin').value;
+        const checkout = document.getElementById('data_checkout').value;
+
+        if (!apto || !checkin || !checkout) { alert("Preencha Apartamento, Check-in e Check-out!"); return; }
+
+        const { data: conflitos } = await supabaseClient.from('reservas')
+            .select('*')
+            .eq('apto_id', apto)
+            .lt('data_checkin', checkout)
+            .gt('data_checkout', checkin);
+
+        if (conflitos && conflitos.length > 0) {
+            alert("ERRO: Este apartamento já está ocupado no período selecionado!");
+            return;
+        }
+
+        const dataLimite = new Date(checkin);
+        dataLimite.setDate(dataLimite.getDate() + minNoitesAlerta);
+        const dataLimiteStr = dataLimite.toISOString().split('T')[0];
+
+        const { data: proximos } = await supabaseClient.from('reservas')
+            .select('data_checkin')
+            .eq('apto_id', apto)
+            .gt('data_checkin', checkin)
+            .lte('data_checkin', dataLimiteStr);
+
+        if (proximos && proximos.length > 0) {
+            document.getElementById('msgAlerta').innerText = `Atenção: Existem reservas confirmadas para as próximas ${minNoitesAlerta} noites. Deseja continuar?`;
+            document.getElementById('modalAlerta').style.display = 'block';
+        } else {
+            salvarFinal();
+        }
+    }
+
+    async function salvarFinal() {
+        fecharAlerta();
+        const reserva = {
+            apto_id: document.getElementById('apto_id').value,
+            guest_principal: document.getElementById('guest_principal').value,
+            data_checkin: document.getElementById('data_checkin').value,
+            data_checkout: document.getElementById('data_checkout').value,
+            noites: document.getElementById('noites').value,
+            origem: document.getElementById('origem').value,
+            guest_2: document.getElementById('guest_2').value,
+            guest_3: document.getElementById('guest_3').value,
+            guest_4: document.getElementById('guest_4').value,
+            guest_5: document.getElementById('guest_5').value,
+            guest_6: document.getElementById('guest_6').value,
+            num_adultos: document.getElementById('num_adultos').value,
+            num_criancas: document.getElementById('num_criancas').value,
+            codigo_porta_1: document.getElementById('codigo_porta_1').value,
+            codigo_porta_2: document.getElementById('codigo_porta_2').value,
+            valor_creditado: document.getElementById('valor_creditado').value || 0,
+            observacoes: document.getElementById('observacoes').value,
+            usuario_alterou: ""
+        };
+
+        const { error } = await supabaseClient.from('reservas').insert([reserva]);
+
+        if (error) {
+            alert("Erro ao salvar: " + error.message);
+        } else {
+            alert("Reserva salva com sucesso!");
+            location.reload();
+        }
+    }
+
+    function fecharAlerta() { document.getElementById('modalAlerta').style.display = 'none'; }
+</script>
+</body>
+</html>
