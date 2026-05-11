@@ -12,20 +12,17 @@
         .campo { margin-bottom: 18px; }
         label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; color: #444; }
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
-        input:focus, select:focus { outline: none; border-color: #3182ce; box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2); }
-        .btn-salvar { width: 100%; padding: 14px; background-color: #38a169; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.2s; }
-        .btn-salvar:hover { background-color: #2f855a; }
+        input:focus { outline: none; border-color: #3182ce; box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2); }
+        .btn-salvar { width: 100%; padding: 14px; background-color: #38a169; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; }
         .btn-salvar:disabled { background-color: #a0aec0; cursor: not-allowed; }
         .btn-extras { background-color: #3182ce; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; font-size: 14px; }
         #secao-extras { display: none; background: #f8fafc; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 18px; }
         
-        /* Modais Customizados */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-box { background: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-box { background: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; }
         .modal-box h3 { margin-top: 0; color: #e53e3e; }
         .modal-box.alerta h3 { color: #d69e2e; }
-        .modal-box p { font-size: 16px; line-height: 1.5; color: #4a5568; }
-        .btn-modal { padding: 10px 25px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; margin: 5px; }
+        .btn-modal { padding: 10px 25px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin: 5px; }
         .btn-ok { background: #e53e3e; color: white; }
         .btn-continuar { background: #38a169; color: white; }
         .btn-cancelar { background: #718096; color: white; }
@@ -38,28 +35,28 @@
     
     <div class="campo">
         <label>Apartamento *</label>
-        <select id="apto_id" onchange="verificarDisponibilidade()"></select>
+        <select id="apto_id" onchange="validarDatas()"></select>
     </div>
 
     <div class="campo">
         <label>Hóspede Principal (Guest) *</label>
-        <input type="text" id="guest_principal" placeholder="Nome completo">
+        <input type="text" id="guest_principal">
     </div>
 
     <div style="display: flex; gap: 15px;">
         <div class="campo" style="flex: 1;">
             <label>Check-In *</label>
-            <input type="date" id="data_checkin" onchange="verificarDisponibilidade()">
+            <input type="date" id="data_checkin" onchange="validarDatas()">
         </div>
         <div class="campo" style="flex: 1;">
             <label>Check-Out *</label>
-            <input type="date" id="data_checkout" onchange="verificarDisponibilidade()">
+            <input type="date" id="data_checkout" onchange="validarDatas()">
         </div>
     </div>
 
     <div class="campo">
         <label>Noites</label>
-        <input type="text" id="noites" readonly style="background: #edf2f7; color: #4a5568;">
+        <input type="text" id="noites" readonly style="background: #edf2f7;">
     </div>
 
     <div class="campo">
@@ -73,12 +70,11 @@
         </select>
     </div>
 
-    <button type="button" class="btn-extras" onclick="toggleExtras()">+ Adicionar hóspedes extras / Detalhes</button>
+    <button type="button" class="btn-extras" onclick="toggleExtras()">+ Adicionar hóspedes extras</button>
 
     <div id="secao-extras">
         <div class="campo"><label>Guest 2</label><input type="text" id="guest_2"></div>
         <div class="campo"><label>Guest 3</label><input type="text" id="guest_3"></div>
-        <div class="campo"><label>Guest 4</label><input type="text" id="guest_4"></div>
         <div style="display: flex; gap: 10px;">
             <div class="campo"><label>Adultos</label><input type="number" id="num_adultos" value="1"></div>
             <div class="campo"><label>Crianças</label><input type="number" id="num_criancas" value="0"></div>
@@ -90,21 +86,16 @@
         <label>Valor Creditado (R$)</label>
         <input type="number" step="0.01" id="valor_creditado">
     </div>
-    
-    <div class="campo">
-        <label>OBS:</label>
-        <textarea id="observacoes" rows="3"></textarea>
-    </div>
 
     <button id="btnSalvar" class="btn-salvar" onclick="salvarFinal()">Salvar Reserva</button>
 </div>
 
-<!-- Modais Customizados -->
+<!-- Modais -->
 <div id="modalErro" class="modal-overlay">
     <div class="modal-box">
-        <h3>Bloqueado</h3>
+        <h3>Data Indisponível</h3>
         <p id="msgErro"></p>
-        <button class="btn-modal btn-ok" onclick="fecharModais()">Entendi</button>
+        <button class="btn-modal btn-ok" onclick="fecharModais()">Corrigir</button>
     </div>
 </div>
 
@@ -113,7 +104,7 @@
         <h3>Atenção</h3>
         <p id="msgAlerta"></p>
         <button class="btn-modal btn-continuar" onclick="confirmarAlerta()">Estou ciente / Continuar</button>
-        <button class="btn-modal btn-cancelar" onclick="cancelarReserva()">Corrigir Datas</button>
+        <button class="btn-modal btn-cancelar" onclick="limparDatas()">Corrigir Datas</button>
     </div>
 </div>
 
@@ -123,10 +114,9 @@
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
     let minNoitesAlerta = 4;
-    let bloqueado = false;
     let alertaConfirmado = false;
 
-    async function carregarDadosIniciais() {
+    async function carregarDados() {
         const { data: aptos } = await supabaseClient.from('apartamentos').select('id, nome_apto').order('nome_apto');
         const select = document.getElementById('apto_id');
         select.innerHTML = '<option value="">Selecione o Apartamento</option>';
@@ -135,50 +125,65 @@
         const { data: config } = await supabaseClient.from('configuracoes').select('valor').eq('chave', 'minimo_noites_alerta').single();
         if (config) minNoitesAlerta = config.valor;
     }
-    carregarDadosIniciais();
+    carregarDados();
 
     function toggleExtras() {
         const div = document.getElementById('secao-extras');
         div.style.display = div.style.display === 'block' ? 'none' : 'block';
     }
 
-    async function verificarDisponibilidade() {
+    async function validarDatas() {
         const apto = document.getElementById('apto_id').value;
         const checkin = document.getElementById('data_checkin').value;
         const checkout = document.getElementById('data_checkout').value;
         const btn = document.getElementById('btnSalvar');
 
-        if (!apto || !checkin || !checkout) return;
+        if (!apto || !checkin) return;
 
-        // Calcular Noites
+        // 1. VALIDAÇÃO IMEDIATA DO CHECK-IN
+        // Verifica se a data de check-in cai DENTRO de uma reserva existente
+        // (A reserva é considerada ocupada do Check-in até o dia ANTERIOR ao Check-out)
+        const { data: conflitoCheckin } = await supabaseClient.from('reservas')
+            .select('guest_principal, data_checkout')
+            .eq('apto_id', apto)
+            .lte('data_checkin', checkin)
+            .gt('data_checkout', checkin); // Check-in está entre In e Out (não inclusive o Out)
+
+        if (conflitoCheckin.length > 0) {
+            mostrarErro(`Não é possível fazer check-in nesta data. O apartamento estará ocupado por ${conflitoCheckin[0].guest_principal} até as 11h deste dia.`);
+            document.getElementById('data_checkin').value = "";
+            return;
+        }
+
+        // Se o checkout ainda não foi preenchido, paramos aqui
+        if (!checkout) return;
+
+        // 2. VALIDAÇÃO DO PERÍODO COMPLETO (Se o checkout foi preenchido)
         const inDate = new Date(checkin);
         const outDate = new Date(checkout);
         const diffDays = Math.ceil(Math.abs(outDate - inDate) / (1000 * 60 * 60 * 24));
         document.getElementById('noites').value = outDate > inDate ? diffDays : "Data inválida";
 
         if (outDate <= inDate) {
-            mostrarErro("A data de Check-out deve ser maior que a de Check-in.");
+            mostrarErro("O Check-out deve ser posterior ao Check-in.");
+            document.getElementById('data_checkout').value = "";
             return;
         }
 
-        // 1. Verificar Bloqueio Total (Ocupado no período)
-        const { data: conflitos } = await supabaseClient.from('reservas')
-            .select('guest_principal, data_checkin, data_checkout')
+        // Verifica se existe qualquer reserva que comece antes do meu checkout e termine após meu checkin
+        const { data: conflitoPeriodo } = await supabaseClient.from('reservas')
+            .select('guest_principal')
             .eq('apto_id', apto)
             .lt('data_checkin', checkout)
             .gt('data_checkout', checkin);
 
-        if (conflitos.length > 0) {
-            bloqueado = true;
-            btn.disabled = true;
-            mostrarErro(`Este apartamento já possui uma reserva para ${conflitos[0].guest_principal} neste período.`);
+        if (conflitoPeriodo.length > 0) {
+            mostrarErro(`Conflito: O período selecionado sobrepõe a reserva de ${conflitoPeriodo[0].guest_principal}.`);
+            document.getElementById('data_checkout').value = "";
             return;
         }
 
-        bloqueado = false;
-        btn.disabled = false;
-
-        // 2. Verificar Regra das 4 Noites (Alerta de Check-in próximo)
+        // 3. REGRA DAS 4 NOITES (ALERTA)
         const dataFimJanela = new Date(checkin);
         dataFimJanela.setDate(dataFimJanela.getDate() + minNoitesAlerta);
         const dataFimStr = dataFimJanela.toISOString().split('T')[0];
@@ -186,11 +191,11 @@
         const { data: proximos } = await supabaseClient.from('reservas')
             .select('data_checkin')
             .eq('apto_id', apto)
-            .gt('data_checkin', checkin) // Busca reservas que começam DEPOIS do meu checkin
-            .lte('data_checkin', dataFimStr); // Mas dentro da janela de 4 dias
+            .gt('data_checkin', checkin)
+            .lte('data_checkin', dataFimStr);
 
         if (proximos.length > 0 && !alertaConfirmado) {
-            mostrarAlerta(`Atenção: Existe uma reserva confirmada começando em breve (dentro das próximas ${minNoitesAlerta} noites). Este hóspede terá que sair ou mudar de quarto.`);
+            mostrarAlerta(`Atenção: Existe uma reserva começando em breve (nas próximas ${minNoitesAlerta} noites).`);
         }
     }
 
@@ -213,38 +218,42 @@
         fecharModais();
     }
 
-    function cancelarReserva() {
+    function limparDatas() {
         document.getElementById('data_checkin').value = "";
         document.getElementById('data_checkout').value = "";
         fecharModais();
     }
 
     async function salvarFinal() {
-        if (bloqueado) return;
-        
+        const apto = document.getElementById('apto_id').value;
+        const guest = document.getElementById('guest_principal').value;
+        const checkin = document.getElementById('data_checkin').value;
+        const checkout = document.getElementById('data_checkout').value;
+
+        if (!apto || !guest || !checkin || !checkout) {
+            mostrarErro("Preencha todos os campos obrigatórios (*)");
+            return;
+        }
+
         const reserva = {
-            apto_id: document.getElementById('apto_id').value,
-            guest_principal: document.getElementById('guest_principal').value,
-            data_checkin: document.getElementById('data_checkin').value,
-            data_checkout: document.getElementById('data_checkout').value,
+            apto_id: apto,
+            guest_principal: guest,
+            data_checkin: checkin,
+            data_checkout: checkout,
             noites: document.getElementById('noites').value,
             origem: document.getElementById('origem').value,
             guest_2: document.getElementById('guest_2').value,
-            guest_3: document.getElementById('guest_3').value,
             num_adultos: document.getElementById('num_adultos').value,
             num_criancas: document.getElementById('num_criancas').value,
             codigo_porta_1: document.getElementById('codigo_porta_1').value,
-            valor_creditado: document.getElementById('valor_creditado').value || 0,
-            observacoes: document.getElementById('observacoes').value
+            valor_creditado: document.getElementById('valor_creditado').value || 0
         };
-
-        if(!reserva.guest_principal) { mostrarErro("Por favor, informe o nome do hóspede."); return; }
 
         const { error } = await supabaseClient.from('reservas').insert([reserva]);
         if (error) {
             mostrarErro("Erro ao salvar: " + error.message);
         } else {
-            alert("Reserva salva com sucesso!"); // Este alert é simples, mas para sucesso é ok.
+            alert("Reserva salva com sucesso!");
             location.reload();
         }
     }
