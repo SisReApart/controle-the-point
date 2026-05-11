@@ -12,7 +12,7 @@
         .sidebar { width: 280px; background: white; padding: 12px; border-right: 1px solid #ddd; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.05); flex-shrink: 0; }
         .sidebar h2 { font-size: 0.9rem; margin-top: 0; color: #2c3e50; border-bottom: 2px solid #38a169; padding-bottom: 5px; }
         .campo { margin-bottom: 8px; }
-        label { display: block; font-size: 9px; font-weight: bold; margin-bottom: 2px; color: #666; text-transform: uppercase; }
+        label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 2px; color: #666; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; font-size: 12px; }
         .btn-salvar { width: 100%; padding: 10px; background: #38a169; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 13px; }
         
@@ -25,14 +25,15 @@
         .titulo-mes-tabela { font-weight: bold; color: #2d3748; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; padding-left: 5px; }
         
         table { border-collapse: collapse; width: 100%; table-layout: fixed; }
-        th, td { border: 1px solid var(--cor-borda); height: 22px; text-align: center; font-size: 9px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0; }
+        th, td { border: 1px solid var(--cor-borda); height: 24px; text-align: center; font-size: 9px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0; }
         
         .col-apto { width: 125px; text-align: left; padding-left: 5px; background: #f8f9fa; font-weight: bold; font-size: 9px; }
         .cabecalho-dias { background: #2d3748; color: white; height: 18px; }
-        .cabecalho-semana { background: #4a5568; color: white; height: 16px; font-size: 8px; }
+        .cabecalho-semana { background: #cbd5e0; color: #4a5568; height: 16px; font-size: 8px; font-weight: bold; }
         
-        .reserva-p { background-color: var(--cor-p); color: #000; font-weight: 600; }
-        .reserva-d { background-color: var(--cor-d); color: #000; font-weight: 600; }
+        .reserva-p, .reserva-d { font-size: 11px; font-weight: 600; padding: 0 4px; }
+        .reserva-p { background-color: var(--cor-p); color: #000; }
+        .reserva-d { background-color: var(--cor-d); color: #000; }
         .reserva-vinho { background-color: var(--cor-vinho); border: none; } 
         
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
@@ -180,17 +181,36 @@
         const apto = document.getElementById('apto_id').value;
         const cin = document.getElementById('data_checkin').value;
         const cout = document.getElementById('data_checkout').value;
-        if (!apto || !cin || !cout) return;
+        
+        if (!apto || !cin) return;
 
-        // Regra do Turnover: Só bloqueia se o NOVO período entra de fato nas noites ocupadas. 
-        // Se Checkin Novo == Checkout Antigo, o Supabase lt/gt correto não deve acusar conflito.
-        const { data: conflito } = await supabaseClient.from('reservas').select('guest_principal')
-            .eq('apto_id', apto).lt('data_checkin', cout).gt('data_checkout', cin);
+        // 1. Validação Imediata do Check-in (Alertar se a data já estiver ocupada)
+        const { data: conflitoCheckin } = await supabaseClient.from('reservas').select('guest_principal')
+            .eq('apto_id', apto)
+            .lte('data_checkin', cin)
+            .gt('data_checkout', cin);
 
-        if (conflito.length > 0) {
-            mostrarModal('modalErro', `Conflito com ${conflito[0].guest_principal}.`, 'msgErro');
-            document.getElementById('data_checkin').value = ""; return;
+        if (conflitoCheckin.length > 0) {
+            mostrarModal('modalErro', `Indisponível: O apto já está ocupado por ${conflitoCheckin[0].guest_principal}.`, 'msgErro');
+            document.getElementById('data_checkin').value = "";
+            return;
         }
+
+        if (!cout) return;
+
+        // 2. Validação do Período Inteiro (Strict Check)
+        // Regra: Novo In < Antigo Out E Novo Out > Antigo In
+        const { data: conflitoGeral } = await supabaseClient.from('reservas').select('guest_principal')
+            .eq('apto_id', apto)
+            .lt('data_checkin', cout)
+            .gt('data_checkout', cin);
+
+        if (conflitoGeral.length > 0) {
+            mostrarModal('modalErro', `Bloqueado: Conflito com a reserva de ${conflitoGeral[0].guest_principal}.`, 'msgErro');
+            document.getElementById('data_checkout').value = "";
+            return;
+        }
+
         const inD = new Date(cin); const outD = new Date(cout);
         const noites = Math.ceil(Math.abs(outD - inD) / (1000 * 60 * 60 * 24));
         document.getElementById('noites').value = outD > inD ? noites : "Erro";
