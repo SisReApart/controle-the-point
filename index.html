@@ -19,7 +19,6 @@
         .btn-excluir { width: 100%; padding: 8px; background: #e53e3e; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 11px; display: none; }
         .btn-limpar { width: 100%; padding: 5px; background: #718096; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 5px; font-size: 10px; display: none; }
         
-        /* Botão Azul solicitado */
         .btn-extras { background: #3182ce; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 11px; font-weight: bold; margin: 10px 0; }
 
         #secao-extras { display: none; background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 10px; }
@@ -47,17 +46,29 @@
         
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
         .modal-box { background: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 350px; width: 90%; }
-        .btn-modal { padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 5px; font-size: 13px; }
 
-        /* ESTILOS DE IMPRESSÃO */
+        /* --- ESTILOS EXCLUSIVOS DE IMPRESSÃO --- */
         #area-impressao { display: none; }
         @media print {
+            @page { size: landscape; margin: 0.5cm; }
             body * { visibility: hidden; }
             #area-impressao, #area-impressao * { visibility: visible; }
-            #area-impressao { display: block; position: absolute; left: 0; top: 0; width: 100%; background: white; }
-            .folha-print { page-break-after: always; padding: 20px; }
-            .mes-print { margin-bottom: 20px; border: 1px solid #000; }
-            .mes-print table { font-size: 8px; }
+            #area-impressao { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; }
+            
+            .folha-print { page-break-after: always; width: 100%; }
+            
+            /* Redução drástica para caber 5 meses em uma folha paisagem */
+            .mes-print { margin-bottom: 5px !important; padding: 0 !important; border: none !important; }
+            .mes-print .titulo-mes-tabela { font-size: 10px; margin-bottom: 2px; }
+            .mes-print table th, .mes-print table td { 
+                height: 14px !important; 
+                font-size: 7px !important; 
+                line-height: 14px !important;
+            }
+            .mes-print .col-apto { width: 90px !important; }
+            .mes-print .cabecalho-dias { height: 14px !important; }
+            .mes-print .cabecalho-semana { height: 12px !important; }
+            
             .sidebar, .topo-controles { display: none !important; }
         }
     </style>
@@ -92,7 +103,6 @@
     
     <div class="campo"><label>OBS:</label><textarea id="observacoes" rows="2"></textarea></div>
 
-    <!-- Botão Azul movido para baixo da OBS -->
     <button type="button" class="btn-extras" onclick="toggleExtras()">Exibir Campos Extras</button>
     
     <div id="secao-extras">
@@ -106,7 +116,6 @@
         <div class="campo"><label>Código Porta 2</label><input type="text" id="codigo_porta_2"></div>
         
         <hr>
-        <!-- Novos Campos solicitados -->
         <div class="campo"><label>Valor Creditado (R$)</label><input type="number" step="0.01" id="valor_creditado"></div>
         <div class="campo"><label>Data Crédito</label><input type="date" id="data_credito"></div>
         
@@ -127,12 +136,11 @@
         <button class="btn-nav" onclick="mudarMes(-1)">◀ ANTERIOR</button>
         <button class="btn-nav btn-hoje" onclick="irParaHoje()">HOJE</button>
         <button class="btn-nav" onclick="mudarMes(1)">PRÓXIMO ▶</button>
-        <button class="btn-nav btn-print" onclick="imprimirRelatorioGeral()">🖨️ IMPRIMIR</button>
+        <button class="btn-nav btn-print" onclick="imprimirRelatorioGeral()">🖨️ IMPRIMIR (5 MESES POR PÁG)</button>
     </div>
     <div id="area-mapas"></div>
 </div>
 
-<!-- Área fantasma para impressão -->
 <div id="area-impressao"></div>
 
 <!-- Modais -->
@@ -172,7 +180,6 @@
             div.style.display = 'none';
         } else {
             div.style.display = 'block';
-            // Ao abrir, registra quem e quando (Simulado ou via login se tiver)
             document.getElementById('usuario_alterou').value = "Sistema"; 
             document.getElementById('data_alteracao').value = new Date().toLocaleString('pt-BR');
         }
@@ -344,7 +351,6 @@
         if (noites < minNoites && !alertaAceito && noites > 0) mostrarModal('modalAlerta', `Estadia curta (${noites} noites).`);
     }
 
-    // Função de Impressão de 5 meses por folha
     function imprimirRelatorioGeral() {
         const area = document.getElementById('area-impressao');
         area.innerHTML = "";
@@ -352,7 +358,6 @@
         let dataLoop = new Date(); dataLoop.setDate(1);
         let dataFim = new Date();
 
-        // Acha a última reserva para saber até quando imprimir
         reservasGlobais.forEach(r => {
             let dOut = new Date(r.data_checkout);
             if (dOut > dataFim) dataFim = dOut;
@@ -365,7 +370,6 @@
             dataAux.setMonth(dataAux.getMonth() + 1);
         }
 
-        // Agrupa de 5 em 5 meses por folha
         for (let i = 0; i < mesesParaGerar.length; i += 5) {
             const folha = document.createElement('div');
             folha.className = 'folha-print';
