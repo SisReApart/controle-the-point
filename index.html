@@ -25,7 +25,7 @@
         .titulo-mes-tabela { font-weight: bold; color: #2d3748; margin-bottom: 5px; font-size: 14px; text-transform: uppercase; padding-left: 5px; }
         
         table { border-collapse: collapse; width: 100%; table-layout: fixed; }
-        th, td { border: 1px solid var(--cor-borda); height: 28px; text-align: center; font-size: 10px; overflow: hidden; white-space: nowrap; }
+        th, td { border: 1px solid var(--cor-borda); height: 28px; text-align: center; font-size: 9px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0 2px; }
         
         .col-apto { width: 140px; text-align: left; padding-left: 8px; background: #f8f9fa; font-weight: bold; font-size: 10px; }
         .cabecalho-dias { background: #2d3748; color: white; }
@@ -76,6 +76,10 @@
         </select>
     </div>
     <div class="campo">
+        <label>Adultos</label>
+        <input type="number" id="num_adultos" value="1">
+    </div>
+    <div class="campo">
         <label>Valor Creditado (R$)</label>
         <input type="number" step="0.01" id="valor_creditado">
     </div>
@@ -123,6 +127,18 @@
         renderizarMapaTriplo();
     }
 
+    // Função auxiliar para mapear o código da origem
+    function getCodigoOrigem(origem) {
+        const mapa = {
+            'Booking': 'B',
+            'AirBnb': 'A',
+            'VRBO': 'V',
+            'D': 'D',
+            'P': 'P'
+        };
+        return mapa[origem] || origem;
+    }
+
     async function renderizarMapaTriplo() {
         const area = document.getElementById('area-mapas');
         area.innerHTML = "Carregando...";
@@ -160,28 +176,24 @@
                 const saindoHoje = reservas.find(r => r.apto_id === apto.id && r.data_checkout === dataIso);
                 const entrandoHoje = reservas.find(r => r.apto_id === apto.id && r.data_checkin === dataIso);
 
-                // 1. REGRA VINHO: Turnover. Fica vinho e vazio.
                 if (saindoHoje && entrandoHoje) {
                     html += `<td class="reserva-vinho"></td>`;
                 } 
                 else {
-                    // Encontrar reserva ativa hoje
                     const resAtiva = reservas.find(r => r.apto_id === apto.id && dataIso >= r.data_checkin && dataIso < r.data_checkout);
 
                     if (resAtiva) {
-                        // Decidir se começamos a desenhar a barra amarela HOJE
                         let deveComeçarDesenho = false;
-                        
                         const saindoOntem = reservas.find(r => r.apto_id === apto.id && r.data_checkout === ontemIso);
                         const entrandoOntem = reservas.find(r => r.apto_id === apto.id && r.data_checkin === ontemIso);
                         const foiTurnoverOntem = (saindoOntem && entrandoOntem);
 
                         if (dataIso === resAtiva.data_checkin && !saindoHoje) {
-                            deveComeçarDesenho = true; // Check-in normal
+                            deveComeçarDesenho = true;
                         } else if (foiTurnoverOntem && resAtiva.data_checkin === ontemIso) {
-                            deveComeçarDesenho = true; // Começa hoje porque ontem foi dia vinho
+                            deveComeçarDesenho = true;
                         } else if (d === 1) {
-                            deveComeçarDesenho = true; // Começa no dia 1 do mês se o cara já está lá
+                            deveComeçarDesenho = true;
                         }
 
                         if (deveComeçarDesenho) {
@@ -190,16 +202,19 @@
                             while(tempD <= ultimoDia) {
                                 const dIsoL = new Date(ano, mes, tempD).toISOString().split('T')[0];
                                 if (dIsoL < resAtiva.data_checkin || dIsoL >= resAtiva.data_checkout) break;
-                                
                                 const saiL = reservas.find(r => r.apto_id === apto.id && r.data_checkout === dIsoL);
                                 const entL = reservas.find(r => r.apto_id === apto.id && r.data_checkin === dIsoL);
-                                if (saiL && entL && tempD > d) break; // Para se bater num dia vinho futuro
-
+                                if (saiL && entL && tempD > d) break;
                                 duracaoVisual++;
                                 tempD++;
                             }
                             const classe = (resAtiva.origem === 'P') ? 'reserva-p' : 'reserva-d';
-                            html += `<td colspan="${duracaoVisual}" class="${classe}">${resAtiva.guest_principal.split(' ')[0]}</td>`;
+                            
+                            // COMPOSIÇÃO DO NOME: B - Nome Completo - XAdt
+                            const cod = getCodigoOrigem(resAtiva.origem);
+                            const nomeFormatado = `${cod} - ${resAtiva.guest_principal} - ${resAtiva.num_adultos}Adt`;
+                            
+                            html += `<td colspan="${duracaoVisual}" class="${classe}">${nomeFormatado}</td>`;
                             d += (duracaoVisual - 1);
                         } else {
                             html += `<td></td>`;
@@ -256,6 +271,7 @@
             data_checkout: document.getElementById('data_checkout').value,
             noites: document.getElementById('noites').value,
             origem: document.getElementById('origem').value,
+            num_adultos: document.getElementById('num_adultos').value,
             valor_creditado: document.getElementById('valor_creditado').value || 0,
             observacoes: document.getElementById('observacoes').value
         };
