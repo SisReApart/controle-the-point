@@ -9,7 +9,6 @@
         :root { --cor-p: #add8e6; --cor-d: #fff700; --cor-vinho: #800020; --cor-borda: #ddd; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; overflow: hidden; }
         
-        /* Sidebar */
         .sidebar { width: 300px; background: white; padding: 15px; border-right: 1px solid #ddd; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.05); flex-shrink: 0; }
         .sidebar h2 { font-size: 1rem; margin-top: 0; color: #2c3e50; border-bottom: 2px solid #38a169; padding-bottom: 5px; }
         .campo { margin-bottom: 10px; }
@@ -17,13 +16,11 @@
         input, select, textarea { width: 100%; padding: 6px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; font-size: 13px; }
         .btn-salvar { width: 100%; padding: 10px; background: #38a169; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 14px; }
         
-        /* Main Content */
         .main-content { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; background: #edf2f7; }
         .topo-controles { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; gap: 10px; position: sticky; top: 0; z-index: 100; background: #edf2f7; padding: 5px; }
         .btn-nav { padding: 6px 12px; cursor: pointer; background: white; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold; font-size: 12px; }
         .btn-hoje { background: #3182ce; color: white; border: none; }
 
-        /* Estilo das Tabelas */
         .mes-container { margin-bottom: 25px; background: white; border-radius: 8px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .titulo-mes-tabela { font-weight: bold; color: #2d3748; margin-bottom: 5px; font-size: 14px; text-transform: uppercase; padding-left: 5px; }
         
@@ -33,12 +30,10 @@
         .col-apto { width: 140px; text-align: left; padding-left: 8px; background: #f8f9fa; font-weight: bold; font-size: 10px; }
         .cabecalho-dias { background: #2d3748; color: white; }
         
-        /* Cores das Reservas */
         .reserva-p { background-color: var(--cor-p); color: #000; font-weight: 600; }
         .reserva-d { background-color: var(--cor-d); color: #000; font-weight: 600; }
-        .reserva-vinho { background-color: var(--cor-vinho); border: none; } /* Vazia e sem texto */
+        .reserva-vinho { background-color: var(--cor-vinho); border: none; } 
         
-        /* Modais */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
         .modal-box { background: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 350px; width: 90%; }
         .btn-modal { padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 5px; font-size: 13px; }
@@ -97,12 +92,9 @@
         <button class="btn-nav btn-hoje" onclick="irParaHoje()">HOJE</button>
         <button class="btn-nav" onclick="mudarMes(1)">PRÓXIMO ▶</button>
     </div>
-    <div id="area-mapas">
-        <!-- 3 Tabelas serão geradas aqui -->
-    </div>
+    <div id="area-mapas"></div>
 </div>
 
-<!-- Modais -->
 <div id="modalErro" class="modal-overlay"><div class="modal-box"><h3 style="color:#e53e3e">Bloqueado</h3><p id="msgErro"></p><button class="btn-modal" style="background:#e53e3e;color:white" onclick="fecharModais()">OK</button></div></div>
 <div id="modalAlerta" class="modal-overlay"><div class="modal-box"><h3 style="color:#d69e2e">Atenção</h3><p id="msgAlerta"></p><button class="btn-modal" style="background:#38a169;color:white" onclick="confirmarAlerta()">Continuar</button><button class="btn-modal" style="background:#718096;color:white" onclick="limparDatas()">Corrigir</button></div></div>
 <div id="modalSucesso" class="modal-overlay"><div class="modal-box"><h3>✔ Sucesso!</h3><p>Reserva cadastrada.</p><button class="btn-modal" style="background:#38a169;color:white" onclick="location.reload()">OK</button></div></div>
@@ -112,7 +104,7 @@
     const SB_KEY = "sb_publishable_52ePL6AdYLm58359gM4VJg_x5bfdamZ";
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    let mesBase = new Date(); // O primeiro dos 3 meses mostrados
+    let mesBase = new Date(); 
     mesBase.setDate(1);
     let aptosGlobais = [];
     let minNoites = 4;
@@ -133,12 +125,9 @@
 
     async function renderizarMapaTriplo() {
         const area = document.getElementById('area-mapas');
-        area.innerHTML = "Carregando mapas...";
-        
+        area.innerHTML = "Carregando...";
         const { data: reservas } = await supabaseClient.from('reservas').select('*');
         area.innerHTML = "";
-
-        // Loop para criar 3 meses
         for (let i = 0; i < 3; i++) {
             const dataFoco = new Date(mesBase.getFullYear(), mesBase.getMonth() + i, 1);
             area.appendChild(criarTabelaMes(dataFoco, reservas));
@@ -152,7 +141,6 @@
         
         const container = document.createElement('div');
         container.className = 'mes-container';
-        
         const titulo = document.createElement('div');
         titulo.className = 'titulo-mes-tabela';
         titulo.innerText = dataRef.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
@@ -164,61 +152,57 @@
 
         aptosGlobais.forEach(apto => {
             html += `<tr><td class="col-apto">${apto.nome_apto}</td>`;
-            
             for (let d = 1; d <= ultimoDia; d++) {
                 const dataIso = new Date(ano, mes, d).toISOString().split('T')[0];
-                
-                const saindo = reservas.find(r => r.apto_id === apto.id && r.data_checkout === dataIso);
-                const entrando = reservas.find(r => r.apto_id === apto.id && r.data_checkin === dataIso);
+                const ontem = new Date(ano, mes, d - 1);
+                const ontemIso = ontem.toISOString().split('T')[0];
 
-                if (saindo && entrando) {
-                    // REGRA VINHO: Turnover. Fica vinho e vazio.
+                const saindoHoje = reservas.find(r => r.apto_id === apto.id && r.data_checkout === dataIso);
+                const entrandoHoje = reservas.find(r => r.apto_id === apto.id && r.data_checkin === dataIso);
+
+                // 1. REGRA VINHO: Turnover. Fica vinho e vazio.
+                if (saindoHoje && entrandoHoje) {
                     html += `<td class="reserva-vinho"></td>`;
                 } 
                 else {
-                    // Verifica se existe uma reserva que OCUPA este dia
-                    // Mas ATENÇÃO: se o hóspede entra hoje e HOJE tem turnover (saída de outro), 
-                    // ele só começa a aparecer amanhã visualmente.
-                    const resOcupando = reservas.find(r => {
-                        if (r.apto_id !== apto.id) return false;
-                        // Se hoje é o check-in dele, verificamos se tem alguém saindo hoje
-                        if (r.data_checkin === dataIso) {
-                            const alguemSaindoHoje = reservas.find(res2 => res2.apto_id === apto.id && res2.data_checkout === dataIso);
-                            if (alguemSaindoHoje) return false; // "Pula" visualmente o dia de hoje
-                        }
-                        return (dataIso >= r.data_checkin && dataIso < r.data_checkout);
-                    });
+                    // Encontrar reserva ativa hoje
+                    const resAtiva = reservas.find(r => r.apto_id === apto.id && dataIso >= r.data_checkin && dataIso < r.data_checkout);
 
-                    if (resOcupando && (dataIso === resOcupando.data_checkin || d === 1 || (reservas.find(rs => rs.apto_id === apto.id && rs.data_checkout === dataIso)))) {
-                        // Lógica de Colspan para o bloco visual
-                        let duracaoVisual = 0;
-                        let tempD = d;
+                    if (resAtiva) {
+                        // Decidir se começamos a desenhar a barra amarela HOJE
+                        let deveComeçarDesenho = false;
                         
-                        while(tempD <= ultimoDia) {
-                            const dIsoLoop = new Date(ano, mes, tempD).toISOString().split('T')[0];
-                            
-                            // A reserva continua amanhã?
-                            const aindaOcupa = (dIsoLoop >= resOcupando.data_checkin && dIsoLoop < resOcupando.data_checkout);
-                            if (!aindaOcupa) break;
+                        const saindoOntem = reservas.find(r => r.apto_id === apto.id && r.data_checkout === ontemIso);
+                        const entrandoOntem = reservas.find(r => r.apto_id === apto.id && r.data_checkin === ontemIso);
+                        const foiTurnoverOntem = (saindoOntem && entrandoOntem);
 
-                            // Amanhã tem turnover (entrada de outro)? Se sim, este bloco acaba hoje.
-                            const amanhaTemTurnover = reservas.find(rT => rT.apto_id === apto.id && rT.data_checkin === dIsoLoop && reservas.some(rS => rS.apto_id === apto.id && rS.data_checkout === dIsoLoop));
-                            if (amanhaTemTurnover) {
-                                // O dia do turnover pertence à cor vinho, não a este bloco.
-                                break;
-                            }
-
-                            duracaoVisual++;
-                            tempD++;
+                        if (dataIso === resAtiva.data_checkin && !saindoHoje) {
+                            deveComeçarDesenho = true; // Check-in normal
+                        } else if (foiTurnoverOntem && resAtiva.data_checkin === ontemIso) {
+                            deveComeçarDesenho = true; // Começa hoje porque ontem foi dia vinho
+                        } else if (d === 1) {
+                            deveComeçarDesenho = true; // Começa no dia 1 do mês se o cara já está lá
                         }
 
-                        if (duracaoVisual > 0) {
-                            const classe = (resOcupando.origem === 'P') ? 'reserva-p' : 'reserva-d';
-                            const nomeExibido = resOcupando.guest_principal.split(' ')[0];
-                            html += `<td colspan="${duracaoVisual}" class="${classe}">${nomeExibido}</td>`;
+                        if (deveComeçarDesenho) {
+                            let duracaoVisual = 0;
+                            let tempD = d;
+                            while(tempD <= ultimoDia) {
+                                const dIsoL = new Date(ano, mes, tempD).toISOString().split('T')[0];
+                                if (dIsoL < resAtiva.data_checkin || dIsoL >= resAtiva.data_checkout) break;
+                                
+                                const saiL = reservas.find(r => r.apto_id === apto.id && r.data_checkout === dIsoL);
+                                const entL = reservas.find(r => r.apto_id === apto.id && r.data_checkin === dIsoL);
+                                if (saiL && entL && tempD > d) break; // Para se bater num dia vinho futuro
+
+                                duracaoVisual++;
+                                tempD++;
+                            }
+                            const classe = (resAtiva.origem === 'P') ? 'reserva-p' : 'reserva-d';
+                            html += `<td colspan="${duracaoVisual}" class="${classe}">${resAtiva.guest_principal.split(' ')[0]}</td>`;
                             d += (duracaoVisual - 1);
                         } else {
-                             html += `<td></td>`;
+                            html += `<td></td>`;
                         }
                     } else {
                         html += `<td></td>`;
@@ -237,22 +221,20 @@
 
     async function verificarReserva() {
         const apto = document.getElementById('apto_id').value;
-        const checkin = document.getElementById('data_checkin').value;
-        const checkout = document.getElementById('data_checkout').value;
-        if (!apto || !checkin) return;
+        const cin = document.getElementById('data_checkin').value;
+        const cout = document.getElementById('data_checkout').value;
+        if (!apto || !cin) return;
 
-        // Regra permitindo Check-in no dia de Check-out (Turnover)
         const { data: conflito } = await supabaseClient.from('reservas').select('guest_principal')
-            .eq('apto_id', apto).lt('data_checkin', checkout).gt('data_checkout', checkin);
+            .eq('apto_id', apto).lt('data_checkin', cout).gt('data_checkout', cin);
 
         if (conflito.length > 0) {
             mostrarModal('modalErro', `Conflito com ${conflito[0].guest_principal}.`, 'msgErro');
             document.getElementById('data_checkin').value = "";
             return;
         }
-
-        if (!checkout) return;
-        const inD = new Date(checkin); const outD = new Date(checkout);
+        if (!cout) return;
+        const inD = new Date(cin); const outD = new Date(cout);
         const noites = Math.ceil(Math.abs(outD - inD) / (1000 * 60 * 60 * 24));
         document.getElementById('noites').value = outD > inD ? noites : "Erro";
 
@@ -279,9 +261,7 @@
         };
         const { error } = await supabaseClient.from('reservas').insert([r]);
         if (!error) document.getElementById('modalSucesso').style.display = 'flex';
-        else alert("Erro: " + error.message);
     }
-
     init();
 </script>
 </body>
