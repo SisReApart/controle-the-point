@@ -9,6 +9,7 @@
         :root { --cor-p: #add8e6; --cor-d: #fff700; --cor-vinho: #800020; --cor-borda: #ddd; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; overflow: hidden; }
         
+        /* Sidebar lateral */
         .sidebar { width: 280px; background: white; padding: 12px; border-right: 1px solid #ddd; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.05); flex-shrink: 0; }
         .sidebar h2 { font-size: 0.9rem; margin-top: 0; color: #2c3e50; border-bottom: 2px solid #38a169; padding-bottom: 5px; }
         .campo { margin-bottom: 8px; }
@@ -16,23 +17,25 @@
         input, select, textarea { width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; font-size: 12px; }
         .btn-salvar { width: 100%; padding: 10px; background: #38a169; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 13px; }
         
-        .main-content { flex: 1; padding: 5px 10px; overflow-y: auto; display: flex; flex-direction: column; background: #edf2f7; }
+        /* Conteúdo Principal */
+        .main-content { flex: 1; padding: 5px 10px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; background: #edf2f7; }
         .topo-controles { display: flex; justify-content: center; align-items: center; margin-bottom: 5px; gap: 8px; position: sticky; top: 0; z-index: 100; background: #edf2f7; padding: 3px; }
         .btn-nav { padding: 5px 10px; cursor: pointer; background: white; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold; font-size: 11px; }
         .btn-hoje { background: #3182ce; color: white; border: none; }
 
+        /* Estilo das Tabelas de Meses */
         .mes-container { margin-bottom: 15px; background: white; border-radius: 6px; padding: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
         .titulo-mes-tabela { font-weight: bold; color: #2d3748; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; padding-left: 5px; }
         
         table { border-collapse: collapse; width: 100%; table-layout: fixed; }
-        th, td { border: 1px solid var(--cor-borda); height: 24px; text-align: center; font-size: 9px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0; }
+        th, td { border: 1px solid var(--cor-borda); height: 26px; text-align: center; font-size: 9px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0; }
         
-        .col-apto { width: 125px; text-align: left; padding-left: 5px; background: #f8f9fa; font-weight: bold; font-size: 9px; }
+        .col-apto { width: 135px; text-align: left; padding-left: 8px; background: #f8f9fa; font-weight: bold; font-size: 9px; }
         .cabecalho-dias { background: #2d3748; color: white; height: 18px; }
-        .cabecalho-semana { background: #f1f5f9; color: #4a5568; height: 16px; font-size: 8px; font-weight: bold; }
+        .cabecalho-semana { background: #f8fafc; color: #4a5568; height: 16px; font-size: 8px; font-weight: bold; border-bottom: 2px solid #eee; }
         
         /* Estilo das Reservas no Mapa */
-        .reserva-p, .reserva-d { font-size: 11px; font-weight: 600; padding: 0 4px; border-radius: 2px; }
+        .reserva-p, .reserva-d { font-size: 12px; font-weight: bold; padding: 0 4px; }
         .reserva-p { background-color: var(--cor-p); color: #000; }
         .reserva-d { background-color: var(--cor-d); color: #000; }
         .reserva-vinho { background-color: var(--cor-vinho); border: none; } 
@@ -90,6 +93,9 @@
     let alertaAceito = false;
     const diasSemanaNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
+    // Transforma "2026-05-15" em número 20260515 para comparação segura
+    function dToN(dStr) { return parseInt(dStr.replace(/-/g, '')); }
+
     async function init() {
         const { data: aptos } = await supabaseClient.from('apartamentos').select('id, nome_apto').order('nome_apto');
         aptosGlobais = aptos;
@@ -128,7 +134,7 @@
 
         let html = `<table><thead><tr class="cabecalho-dias"><th class="col-apto">Dia</th>`;
         for (let d = 1; d <= ultimoDia; d++) html += `<th>${d}</th>`;
-        html += `</tr><tr class="cabecalho-semana"><th class="col-apto">Apartamento</th>`;
+        html += `</tr><tr class="cabecalho-semana"><th class="col-apto">Apto</th>`;
         for (let d = 1; d <= ultimoDia; d++) {
             const sem = diasSemanaNomes[new Date(ano, mes, d).getDay()];
             html += `<th>${sem}</th>`;
@@ -178,7 +184,7 @@
     function mudarMes(v) { mesBase.setMonth(mesBase.getMonth() + v); renderizarMapaTriplo(); }
     function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
 
-    // VALIDAÇÃO CORRIGIDA (SEM ERROS DE GIRO/TURNOVER)
+    // VALIDAÇÃO MATEMÁTICA PARA PERMITIR O GIRO (TURNOVER)
     async function verificarReserva() {
         const apto = document.getElementById('apto_id').value;
         const cin = document.getElementById('data_checkin').value;
@@ -186,11 +192,13 @@
         
         if (!apto || !cin) return;
 
-        // Buscamos todas as reservas do apartamento para conferir no navegador (mais preciso)
         const { data: reservasApto } = await supabaseClient.from('reservas').select('guest_principal, data_checkin, data_checkout').eq('apto_id', apto);
 
-        // 1. Validar Check-in imediato (Giro é permitido!)
-        const conflitoIn = reservasApto.find(r => cin >= r.data_checkin && cin < r.data_checkout);
+        const cinN = dToN(cin);
+
+        // 1. Validar Check-in: Só bloqueia se o NOVO check-in for maior ou igual ao antigo check-in 
+        // E menor (estritamente) que o antigo check-out. Se for igual ao checkout, permite!
+        const conflitoIn = reservasApto.find(r => cinN >= dToN(r.data_checkin) && cinN < dToN(r.data_checkout));
 
         if (conflitoIn) {
             mostrarModal('modalErro', `Indisponível: O apto já está ocupado por ${conflitoIn.guest_principal}.`, 'msgErro');
@@ -199,9 +207,11 @@
         }
 
         if (!cout) return;
+        const coutN = dToN(cout);
 
-        // 2. Validar Período Completo (Conflito de sobreposição)
-        const conflitoGeral = reservasApto.find(r => cin < r.data_checkout && cout > r.data_checkin);
+        // 2. Validar Período Inteiro (Strict Check)
+        // Só bloqueia se houver sobreposição real de noites.
+        const conflitoGeral = reservasApto.find(r => cinN < dToN(r.data_checkout) && coutN > dToN(r.data_checkin));
 
         if (conflitoGeral) {
             mostrarModal('modalErro', `Bloqueado: Conflito com a reserva de ${conflitoGeral.guest_principal}.`, 'msgErro');
