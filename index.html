@@ -9,7 +9,7 @@
         :root { --cor-p: #add8e6; --cor-d: #fff700; --cor-vinho: #800020; --cor-borda: #ddd; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; overflow: hidden; }
         
-        /* Sidebar */
+        /* Sidebar lateral */
         .sidebar { width: 280px; background: white; padding: 12px; border-right: 1px solid #ddd; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.05); flex-shrink: 0; }
         .sidebar h2 { font-size: 0.9rem; margin-top: 0; color: #2c3e50; border-bottom: 2px solid #38a169; padding-bottom: 5px; }
         .campo { margin-bottom: 8px; }
@@ -17,7 +17,7 @@
         input, select, textarea { width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; font-size: 12px; }
         .btn-salvar { width: 100%; padding: 10px; background: #38a169; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 13px; }
         
-        /* Main Content */
+        /* Painel Principal */
         .main-content { flex: 1; padding: 5px 10px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; background: #edf2f7; }
         .topo-controles { display: flex; justify-content: center; align-items: center; margin-bottom: 5px; gap: 8px; position: sticky; top: 0; z-index: 100; background: #edf2f7; padding: 3px; }
         .btn-nav { padding: 5px 10px; cursor: pointer; background: white; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold; font-size: 11px; }
@@ -33,8 +33,7 @@
         .cabecalho-dias { background: #2d3748; color: white; height: 18px; }
         .cabecalho-semana { background: #f8fafc; color: #4a5568; height: 16px; font-size: 8px; font-weight: bold; border-bottom: 1px solid #eee; }
         
-        /* Estilo das Reservas no Mapa (Aumentado) */
-        .reserva-p, .reserva-d { font-size: 12px; font-weight: bold; padding: 0 4px; border-radius: 2px; }
+        .reserva-p, .reserva-d { font-size: 11px; font-weight: bold; padding: 0 4px; }
         .reserva-p { background-color: var(--cor-p); color: #000; }
         .reserva-d { background-color: var(--cor-d); color: #000; }
         .reserva-vinho { background-color: var(--cor-vinho); border: none; } 
@@ -64,6 +63,7 @@
     </div>
     <div class="campo"><label>Adultos</label><input type="number" id="num_adultos" value="1"></div>
     <div class="campo"><label>Valor Creditado (R$)</label><input type="number" step="0.01" id="valor_creditado"></div>
+    <div class="campo"><label>Valor Comissão (R$)</label><input type="number" step="0.01" id="valor_comissao"></div>
     <div class="campo"><label>OBS:</label><textarea id="observacoes" rows="2"></textarea></div>
     <button class="btn-salvar" onclick="salvarFinal()">Salvar Reserva</button>
 </div>
@@ -77,9 +77,10 @@
     <div id="area-mapas"></div>
 </div>
 
+<!-- Modais -->
 <div id="modalErro" class="modal-overlay"><div class="modal-box"><h3 style="color:#e53e3e">Bloqueado</h3><p id="msgErro"></p><button class="btn-modal" style="background:#e53e3e;color:white" onclick="fecharModais()">OK</button></div></div>
 <div id="modalAlerta" class="modal-overlay"><div class="modal-box"><h3 style="color:#d69e2e">Atenção</h3><p id="msgAlerta"></p><button class="btn-modal" style="background:#38a169;color:white" onclick="confirmarAlerta()">Continuar</button><button class="btn-modal" style="background:#718096;color:white" onclick="limparDatas()">Corrigir</button></div></div>
-<div id="modalSucesso" class="modal-overlay"><div class="modal-box"><h3>✔ Sucesso!</h3><p>Reserva cadastrada com sucesso.</p><button class="btn-modal" style="background:#38a169;color:white" onclick="location.reload()">OK</button></div></div>
+<div id="modalSucesso" class="modal-overlay"><div class="modal-box"><h3>✔ Sucesso!</h3><p>Reserva cadastrada.</p><button class="btn-modal" style="background:#38a169;color:white" onclick="location.reload()">OK</button></div></div>
 
 <script>
     const SB_URL = "https://eqoayyftpddombylgxpw.supabase.co";
@@ -91,9 +92,6 @@
     let minNoites = 4;
     let alertaAceito = false;
     const diasSemanaNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
-    // Converte string "2026-05-15" em timestamp de milissegundos para comparação infalível
-    function t(s) { if(!s) return 0; return new Date(s + "T00:00:00").getTime(); }
 
     async function init() {
         const { data: aptos } = await supabaseClient.from('apartamentos').select('id, nome_apto').order('nome_apto');
@@ -143,36 +141,35 @@
         aptosGlobais.forEach(apto => {
             html += `<tr><td class="col-apto">${apto.nome_apto}</td>`;
             for (let d = 1; d <= ultimoDia; d++) {
-                const dataIso = new Date(ano, mes, d).toISOString().split('T')[0];
+                const dIso = new Date(ano, mes, d).toISOString().split('T')[0];
                 const ontemIso = new Date(ano, mes, d - 1).toISOString().split('T')[0];
                 
-                const saindoHoje = (reservas || []).find(r => r.apto_id === apto.id && r.data_checkout === dataIso);
-                const entrandoHoje = (reservas || []).find(r => r.apto_id === apto.id && r.data_checkin === dataIso);
+                const saindoH = reservas.find(r => r.apto_id === apto.id && r.data_checkout === dIso);
+                const entrandoH = reservas.find(r => r.apto_id === apto.id && r.data_checkin === dIso);
 
-                if (saindoHoje && entrandoHoje) {
+                if (saindoH && entrandoH) {
                     html += `<td class="reserva-vinho"></td>`;
                 } else {
-                    const resAtiva = (reservas || []).find(r => r.apto_id === apto.id && dataIso >= r.data_checkin && dataIso < r.data_checkout);
-                    if (resAtiva) {
-                        let deveComeçar = false;
-                        const tOntem = (reservas || []).find(r => r.apto_id === apto.id && r.data_checkout === ontemIso) && (reservas || []).find(r => r.apto_id === apto.id && r.data_checkin === ontemIso);
-                        
-                        if (dataIso === resAtiva.data_checkin && !saindoHoje) deveComeçar = true;
-                        else if (tOntem && resAtiva.data_checkin === ontemIso) deveComeçar = true;
-                        else if (d === 1) deveComeçar = true;
+                    const resA = reservas.find(r => r.apto_id === apto.id && dIso >= r.data_checkin && dIso < r.data_checkout);
+                    if (resA) {
+                        let ok = false;
+                        const tOntem = reservas.find(r => r.apto_id === apto.id && r.data_checkout === ontemIso) && reservas.find(r => r.apto_id === apto.id && r.data_checkin === ontemIso);
+                        if (dIso === resA.data_checkin && !saindoH) ok = true;
+                        else if (tOntem && resA.data_checkin === ontemIso) ok = true;
+                        else if (d === 1) ok = true;
 
-                        if (deveComeçar) {
-                            let durV = 0; let tempD = d;
+                        if (ok) {
+                            let dur = 0; let tempD = d;
                             while(tempD <= ultimoDia) {
-                                const dIsoL = new Date(ano, mes, tempD).toISOString().split('T')[0];
-                                if (dIsoL < resAtiva.data_checkin || dIsoL >= resAtiva.data_checkout) break;
-                                if ((reservas || []).find(r=>r.apto_id===apto.id && r.data_checkout===dIsoL) && (reservas || []).find(r=>r.apto_id===apto.id && r.data_checkin===dIsoL) && tempD > d) break;
-                                durV++; tempD++;
+                                const dL = new Date(ano, mes, tempD).toISOString().split('T')[0];
+                                if (dL < resA.data_checkin || dL >= resA.data_checkout) break;
+                                if (reservas.find(r=>r.apto_id===apto.id && r.data_checkout===dL) && reservas.find(r=>r.apto_id===apto.id && r.data_checkin===dL) && tempD > d) break;
+                                dur++; tempD++;
                             }
-                            const cod = getCodigoOrigem(resAtiva.origem);
-                            const label = `${cod} - ${resAtiva.guest_principal} - ${resAtiva.num_adultos}Adt`;
-                            html += `<td colspan="${durV}" class="${(resAtiva.origem === 'P') ? 'reserva-p' : 'reserva-d'}">${label}</td>`;
-                            d += (durV - 1);
+                            const cod = getCodigoOrigem(resA.origem);
+                            const label = `${cod} - ${resA.guest_principal} - ${resA.num_adultos}Adt`;
+                            html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'}">${label}</td>`;
+                            d += (dur - 1);
                         } else html += `<td></td>`;
                     } else html += `<td></td>`;
                 }
@@ -185,43 +182,42 @@
     function mudarMes(v) { mesBase.setMonth(mesBase.getMonth() + v); renderizarMapaTriplo(); }
     function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
 
-    // VALIDAÇÃO MATEMÁTICA DEFINITIVA (USANDO TIMESTAMPS)
+    // VALIDAÇÃO POR TEXTO (AAAA-MM-DD) - IGNRORA FUSOS E MILISSEGUNDOS
     async function verificarReserva() {
         const apto = document.getElementById('apto_id').value;
-        const cinStr = document.getElementById('data_checkin').value;
-        const coutStr = document.getElementById('data_checkout').value;
+        const cin = document.getElementById('data_checkin').value; // Ex: "2026-05-15"
+        const cout = document.getElementById('data_checkout').value;
         
-        if (!apto || !cinStr) return;
+        if (!apto || !cin) return;
 
         const { data: lista } = await supabaseClient.from('reservas').select('guest_principal, data_checkin, data_checkout').eq('apto_id', apto);
-        const novoIn = t(cinStr);
 
-        // 1. Validar Check-in: Bloqueia se o Check-in Novo estiver DENTRO de uma estadia (In <= Novo < Out)
-        // Se NovoIn == ExistenteOut, NÃO bloqueia (é giro/turnover).
-        const cIn = (lista || []).find(r => novoIn >= t(r.data_checkin) && novoIn < t(r.data_checkout));
+        // 1. Validar Check-in: Bloqueia se cin >= r.In E cin < r.Out
+        // Se cin == r.Out, a comparação cin < r.Out é FALSA, permitindo o giro.
+        const cIn = (lista || []).find(r => cin >= r.data_checkin && cin < r.data_checkout);
 
         if (cIn) {
-            mostrarModal('modalErro', `Indisponível: O apto já está ocupado por ${cIn.guest_principal}.`, 'msgErro');
+            mostrarModal('modalErro', `O apto já estará ocupado por ${cIn.guest_principal}.`, 'msgErro');
             document.getElementById('data_checkin').value = "";
             return;
         }
 
-        if (!coutStr) return;
-        const novoOut = t(coutStr);
+        if (!cout) return;
 
-        // 2. Validar Período: Só bloqueia se houver sobreposição real de noites (NovoIn < ExistenteOut E NovoOut > ExistenteIn)
-        const cGeral = (lista || []).find(r => novoIn < t(r.data_checkout) && novoOut > t(r.data_checkin));
+        // 2. Validar Período Total: Bloqueia se houver sobreposição
+        const cGeral = (lista || []).find(r => cin < r.data_checkout && cout > r.data_checkin);
 
         if (cGeral) {
-            mostrarModal('modalErro', `Bloqueado: Conflito com a reserva de ${cGeral.guest_principal}.`, 'msgErro');
+            mostrarModal('modalErro', `Conflito com a reserva de ${cGeral.guest_principal}.`, 'msgErro');
             document.getElementById('data_checkout').value = "";
             return;
         }
 
-        const inDate = new Date(cinStr); const outDate = new Date(coutStr);
-        const noites = Math.ceil(Math.abs(outDate - inDate) / (1000 * 60 * 60 * 24));
-        document.getElementById('noites').value = outDate > inDate ? noites : "Erro";
-        if (noites < minNoites && !alertaAceito) mostrarModal('modalAlerta', `Estadia curta (${noites} noites).`, 'msgAlerta');
+        const inD = new Date(cin + "T12:00:00"); 
+        const outD = new Date(cout + "T12:00:00");
+        const noites = Math.round((outD - inD) / (1000 * 60 * 60 * 24));
+        document.getElementById('noites').value = noites > 0 ? noites : "Erro";
+        if (noites < minNoites && !alertaAceito && noites > 0) mostrarModal('modalAlerta', `Estadia curta (${noites} noites).`, 'msgAlerta');
     }
 
     function mostrarModal(id, msg, idT) { document.getElementById(idT).innerText = msg; document.getElementById(id).style.display = 'flex'; }
@@ -239,10 +235,12 @@
             origem: document.getElementById('origem').value,
             num_adultos: document.getElementById('num_adultos').value,
             valor_creditado: document.getElementById('valor_creditado').value || 0,
+            valor_comissao: document.getElementById('valor_comissao').value || 0,
             observacoes: document.getElementById('observacoes').value
         };
         const { error } = await supabaseClient.from('reservas').insert([r]);
         if (!error) document.getElementById('modalSucesso').style.display = 'flex';
+        else alert("Erro: " + error.message);
     }
     init();
 </script>
