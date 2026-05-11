@@ -47,29 +47,37 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
         .modal-box { background: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 350px; width: 90%; }
 
-        /* --- ESTILOS EXCLUSIVOS DE IMPRESSÃO --- */
+        /* --- CONFIGURAÇÕES DE IMPRESSÃO --- */
         #area-impressao { display: none; }
         @media print {
-            @page { size: landscape; margin: 0.5cm; }
+            /* Define o papel como Carta (8.5x11in) em Paisagem */
+            @page { size: letter landscape; margin: 0.3in; }
+            
+            /* Força a exibição de cores de fundo na impressora */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
             body * { visibility: hidden; }
             #area-impressao, #area-impressao * { visibility: visible; }
             #area-impressao { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; }
             
             .folha-print { page-break-after: always; width: 100%; }
             
-            /* Redução drástica para caber 5 meses em uma folha paisagem */
-            .mes-print { margin-bottom: 5px !important; padding: 0 !important; border: none !important; }
-            .mes-print .titulo-mes-tabela { font-size: 10px; margin-bottom: 2px; }
-            .mes-print table th, .mes-print table td { 
-                height: 14px !important; 
-                font-size: 7px !important; 
-                line-height: 14px !important;
-            }
-            .mes-print .col-apto { width: 90px !important; }
-            .mes-print .cabecalho-dias { height: 14px !important; }
-            .mes-print .cabecalho-semana { height: 12px !important; }
+            /* Ajuste para ocupar o papel Carta com 5 meses */
+            .mes-print { margin-bottom: 10px !important; padding: 0 !important; border: 1px solid #000 !important; }
+            .mes-print .titulo-mes-tabela { font-size: 12px; margin-bottom: 4px; padding: 2px; background: #eee; }
             
-            .sidebar, .topo-controles { display: none !important; }
+            /* Aumentando altura das linhas para preencher o espaço vertical do papel */
+            .mes-print table th, .mes-print table td { 
+                height: 28px !important; 
+                font-size: 9px !important; 
+                line-height: 28px !important;
+            }
+            
+            .mes-print .col-apto { width: 110px !important; }
+            .mes-print .cabecalho-dias { height: 20px !important; background: #2d3748 !important; color: white !important; }
+            .mes-print .cabecalho-semana { height: 18px !important; background: #f1f5f9 !important; }
+            
+            .sidebar, .topo-controles, .modal-overlay { display: none !important; }
         }
     </style>
 </head>
@@ -136,7 +144,7 @@
         <button class="btn-nav" onclick="mudarMes(-1)">◀ ANTERIOR</button>
         <button class="btn-nav btn-hoje" onclick="irParaHoje()">HOJE</button>
         <button class="btn-nav" onclick="mudarMes(1)">PRÓXIMO ▶</button>
-        <button class="btn-nav btn-print" onclick="imprimirRelatorioGeral()">🖨️ IMPRIMIR (5 MESES POR PÁG)</button>
+        <button class="btn-nav btn-print" onclick="imprimirRelatorioGeral()">🖨️ IMPRIMIR RELATÓRIO</button>
     </div>
     <div id="area-mapas"></div>
 </div>
