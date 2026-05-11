@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel The Point - Gestão de Reservas</title>
+    <title>Painel The Point - Gestão Profissional</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --cor-p: #add8e6; --cor-d: #fff700; --cor-vinho: #800020; --cor-borda: #ddd; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; overflow: hidden; }
         
-        /* Sidebar */
         .sidebar { width: 280px; background: white; padding: 12px; border-right: 1px solid #ddd; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.05); flex-shrink: 0; }
         .sidebar h2 { font-size: 0.9rem; margin-top: 0; color: #2c3e50; border-bottom: 2px solid #38a169; padding-bottom: 5px; }
         .campo { margin-bottom: 8px; }
         label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 2px; color: #666; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; font-size: 12px; }
-        .btn-salvar { width: 100%; padding: 10px; background: #38a169; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 13px; }
         
-        /* Main Content */
-        .main-content { flex: 1; padding: 5px 10px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; background: #edf2f7; }
+        .btn-salvar { width: 100%; padding: 10px; background: #38a169; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 13px; }
+        .btn-excluir { width: 100%; padding: 8px; background: #e53e3e; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 8px; font-size: 11px; display: none; }
+        .btn-limpar { width: 100%; padding: 5px; background: #718096; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 5px; font-size: 10px; display: none; }
+
+        .main-content { flex: 1; padding: 5px 10px; overflow-y: auto; display: flex; flex-direction: column; background: #edf2f7; }
         .topo-controles { display: flex; justify-content: center; align-items: center; margin-bottom: 5px; gap: 8px; position: sticky; top: 0; z-index: 100; background: #edf2f7; padding: 3px; }
         .btn-nav { padding: 5px 10px; cursor: pointer; background: white; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold; font-size: 11px; }
         .btn-hoje { background: #3182ce; color: white; border: none; }
@@ -33,10 +34,11 @@
         .cabecalho-dias { background: #2d3748; color: white; height: 18px; }
         .cabecalho-semana { background: #f1f5f9; color: #4a5568; height: 16px; font-size: 8px; font-weight: bold; }
         
-        .reserva-p, .reserva-d { font-size: 11px; font-weight: bold; color: #000; }
+        .reserva-p, .reserva-d { font-size: 11px; font-weight: bold; color: #000; cursor: pointer; }
+        .reserva-p:hover, .reserva-d:hover { filter: brightness(0.9); }
         .reserva-p { background-color: var(--cor-p); }
         .reserva-d { background-color: var(--cor-d); }
-        .reserva-vinho { background-color: var(--cor-vinho); border: none; color: transparent; } 
+        .reserva-vinho { background-color: var(--cor-vinho); border: none; color: transparent; cursor: pointer; } 
         
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
         .modal-box { background: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 350px; width: 90%; }
@@ -46,7 +48,9 @@
 <body>
 
 <div class="sidebar">
-    <h2>Nova Reserva</h2>
+    <h2 id="form-titulo">Nova Reserva</h2>
+    <input type="hidden" id="edit_id"> <!-- Campo invisível para guardar o ID sendo editado -->
+
     <div class="campo"><label>Apartamento *</label><select id="apto_id" onchange="verificarReserva()"></select></div>
     <div class="campo"><label>Hóspede Principal *</label><input type="text" id="guest_principal"></div>
     <div style="display: flex; gap: 5px;">
@@ -61,11 +65,14 @@
             <option value="VRBO">VRBO</option><option value="D">Direto (D)</option><option value="P">Pendente (P)</option>
         </select>
     </div>
-    <div class="campo"><label>Adultos</label><input type="number" id="num_adultos" value="1"></div>
+    <div class="campo"><label>Adultos</label><input type="number" id="num_adultos" value="3"></div>
     <div class="campo"><label>Valor Creditado (R$)</label><input type="number" step="0.01" id="valor_creditado"></div>
     <div class="campo"><label>Valor Comissão (R$)</label><input type="number" step="0.01" id="valor_comissao"></div>
     <div class="campo"><label>OBS:</label><textarea id="observacoes" rows="2"></textarea></div>
-    <button class="btn-salvar" onclick="salvarFinal()">Salvar Reserva</button>
+    
+    <button id="btn-salvar" class="btn-salvar" onclick="salvarFinal()">Salvar Reserva</button>
+    <button id="btn-limpar" class="btn-limpar" onclick="resetarFormulario()">Novo (Limpar)</button>
+    <button id="btn-excluir" class="btn-excluir" onclick="confirmarExclusao()">Excluir / Cancelar Reserva</button>
 </div>
 
 <div class="main-content">
@@ -77,9 +84,11 @@
     <div id="area-mapas"></div>
 </div>
 
+<!-- Modais -->
 <div id="modalErro" class="modal-overlay"><div class="modal-box"><h3 style="color:#e53e3e">Bloqueado</h3><p id="msgErro"></p><button class="btn-modal" style="background:#e53e3e;color:white" onclick="fecharModais()">OK</button></div></div>
 <div id="modalAlerta" class="modal-overlay"><div class="modal-box"><h3 style="color:#d69e2e">Atenção</h3><p id="msgAlerta"></p><button class="btn-modal" style="background:#38a169;color:white" onclick="confirmarAlerta()">Continuar</button><button class="btn-modal" style="background:#718096;color:white" onclick="limparDatas()">Corrigir</button></div></div>
-<div id="modalSucesso" class="modal-overlay"><div class="modal-box"><h3>✔ Sucesso!</h3><p>Reserva cadastrada.</p><button class="btn-modal" style="background:#38a169;color:white" onclick="location.reload()">OK</button></div></div>
+<div id="modalSucesso" class="modal-overlay"><div class="modal-box"><h3>✔ Sucesso!</h3><p id="msgSucessoTxt"></p><button class="btn-modal" style="background:#38a169;color:white" onclick="location.reload()">OK</button></div></div>
+<div id="modalConfirmarExcluir" class="modal-overlay"><div class="modal-box"><h3>Excluir Reserva?</h3><p>Esta ação não pode ser desfeita.</p><button class="btn-modal" style="background:#e53e3e;color:white" onclick="excluirDeVez()">Sim, Excluir</button><button class="btn-modal" style="background:#718096;color:white" onclick="fecharModais()">Cancelar</button></div></div>
 
 <script>
     const SB_URL = "https://eqoayyftpddombylgxpw.supabase.co";
@@ -88,6 +97,7 @@
 
     let mesBase = new Date(); mesBase.setDate(1);
     let aptosGlobais = [];
+    let reservasGlobais = [];
     let minNoites = 4;
     let alertaAceito = false;
     const diasSemanaNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -113,10 +123,11 @@
     async function renderizarMapaTriplo() {
         const area = document.getElementById('area-mapas');
         const { data: reservas } = await supabaseClient.from('reservas').select('*');
+        reservasGlobais = reservas || [];
         area.innerHTML = "";
         for (let i = 0; i < 3; i++) {
             const dataFoco = new Date(mesBase.getFullYear(), mesBase.getMonth() + i, 1);
-            area.appendChild(criarTabelaMes(dataFoco, reservas || []));
+            area.appendChild(criarTabelaMes(dataFoco, reservasGlobais));
         }
     }
 
@@ -138,34 +149,33 @@
             html += `<tr><td class="col-apto">${apto.nome_apto}</td>`;
             for (let d = 1; d <= ultimoDia; d++) {
                 const dIso = new Date(ano, mes, d).toISOString().split('T')[0];
-                const saindoH = (reservas || []).find(r => r.apto_id === apto.id && fmt(r.data_checkout) === dIso);
-                const entrandoH = (reservas || []).find(r => r.apto_id === apto.id && fmt(r.data_checkin) === dIso);
+                const saindoH = reservas.find(r => r.apto_id === apto.id && fmt(r.data_checkout) === dIso);
+                const entrandoH = reservas.find(r => r.apto_id === apto.id && fmt(r.data_checkin) === dIso);
 
                 if (saindoH && entrandoH) {
-                    html += `<td class="reserva-vinho"></td>`;
+                    html += `<td class="reserva-vinho" onclick="prepararEdicao('${entrandoH.id}')"></td>`;
                 } else {
-                    const resA = (reservas || []).find(r => r.apto_id === apto.id && dIso >= fmt(r.data_checkin) && dIso <= fmt(r.data_checkout));
+                    const resA = reservas.find(r => r.apto_id === apto.id && dIso >= fmt(r.data_checkin) && dIso <= fmt(r.data_checkout));
                     
                     if (resA && (dIso === fmt(resA.data_checkin) || d === 1 || (saindoH === undefined && dIso > fmt(resA.data_checkin)))) {
-                        let deveDesenhar = false;
+                        let deveD = false;
                         const ontemIso = new Date(ano, mes, d - 1).toISOString().split('T')[0];
-                        const foiTurnoverOntem = (reservas || []).find(r => r.apto_id === apto.id && fmt(r.data_checkout) === ontemIso && (reservas || []).some(r2 => r2.apto_id === apto.id && fmt(r2.data_checkin) === ontemIso));
+                        const foiT = reservas.find(r => r.apto_id === apto.id && fmt(r.data_checkout) === ontemIso && reservas.some(r2 => r2.apto_id === apto.id && fmt(r2.data_checkin) === ontemIso));
 
-                        if (dIso === fmt(resA.data_checkin) && !saindoH) deveDesenhar = true;
-                        else if (foiTurnoverOntem && dIso > ontemIso) deveDesenhar = true;
-                        else if (d === 1) deveDesenhar = true;
+                        if (dIso === fmt(resA.data_checkin) && !saindoH) deveD = true;
+                        else if (foiT && dIso > ontemIso) deveD = true;
+                        else if (d === 1) deveD = true;
 
-                        if (deveDesenhar) {
+                        if (deveD) {
                             let dur = 0; let tempD = d;
                             while(tempD <= ultimoDia) {
                                 const dL = new Date(ano, mes, tempD).toISOString().split('T')[0];
                                 if (dL > fmt(resA.data_checkout)) break;
-                                if ((reservas || []).some(r => r.apto_id === apto.id && fmt(r.data_checkout) === dL && (reservas || []).some(r2 => r2.apto_id === apto.id && fmt(r2.data_checkin) === dL)) && tempD > d) break;
+                                if (reservas.some(r => r.apto_id === apto.id && fmt(r.data_checkout) === dL && reservas.some(r2 => r2.apto_id === apto.id && fmt(r2.data_checkin) === dL)) && tempD > d) break;
                                 dur++; tempD++;
                             }
-                            const cod = getCodigoOrigem(resA.origem);
-                            const label = `${cod} - ${resA.guest_principal} - ${resA.num_adultos}Adt`;
-                            html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'}">${label}</td>`;
+                            const label = `${getCodigoOrigem(resA.origem)} - ${resA.guest_principal} - ${resA.num_adultos}Adt`;
+                            html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'}" onclick="prepararEdicao('${resA.id}')">${label}</td>`;
                             d += (dur - 1);
                         } else html += `<td></td>`;
                     } else html += `<td></td>`;
@@ -176,27 +186,79 @@
         html += `</tbody></table>`; container.innerHTML += html; return container;
     }
 
+    // FUNÇÕES DE EDIÇÃO
+    function prepararEdicao(id) {
+        const res = reservasGlobais.find(r => r.id === id);
+        if (!res) return;
+
+        document.getElementById('edit_id').value = res.id;
+        document.getElementById('form-titulo').innerText = "Editar Reserva";
+        document.getElementById('apto_id').value = res.apto_id;
+        document.getElementById('guest_principal').value = res.guest_principal;
+        document.getElementById('data_checkin').value = fmt(res.data_checkin);
+        document.getElementById('data_checkout').value = fmt(res.data_checkout);
+        document.getElementById('noites').value = res.noites;
+        document.getElementById('origem').value = res.origem;
+        document.getElementById('num_adultos').value = res.num_adultos || 3;
+        document.getElementById('valor_creditado').value = res.valor_creditado || 0;
+        document.getElementById('valor_comissao').value = res.valor_comissao || 0;
+        document.getElementById('observacoes').value = res.observacoes || "";
+
+        document.getElementById('btn-salvar').innerText = "Atualizar Reserva";
+        document.getElementById('btn-excluir').style.display = "block";
+        document.getElementById('btn-limpar').style.display = "block";
+        
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function resetarFormulario() {
+        document.getElementById('edit_id').value = "";
+        document.getElementById('form-titulo').innerText = "Nova Reserva";
+        document.getElementById('btn-salvar').innerText = "Salvar Reserva";
+        document.getElementById('btn-excluir').style.display = "none";
+        document.getElementById('btn-limpar').style.display = "none";
+        document.getElementById('data_checkin').value = "";
+        document.getElementById('data_checkout').value = "";
+        document.getElementById('guest_principal').value = "";
+        document.getElementById('num_adultos').value = "3";
+        document.getElementById('valor_creditado').value = "";
+        document.getElementById('valor_comissao').value = "";
+        document.getElementById('observacoes').value = "";
+        document.getElementById('noites').value = "";
+    }
+
+    function confirmarExclusao() { document.getElementById('modalConfirmarExcluir').style.display = 'flex'; }
+    async function excluirDeVez() {
+        const id = document.getElementById('edit_id').value;
+        const { error } = await supabaseClient.from('reservas').delete().eq('id', id);
+        if (!error) location.reload();
+    }
+
+    // NAVEGAÇÃO
     function mudarMes(v) { mesBase.setMonth(mesBase.getMonth() + v); renderizarMapaTriplo(); }
     function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
 
+    // VALIDAÇÃO
     async function verificarReserva() {
         const apto = document.getElementById('apto_id').value;
         const cin = fmt(document.getElementById('data_checkin').value); 
         const cout = fmt(document.getElementById('data_checkout').value);
+        const editId = document.getElementById('edit_id').value;
         if (!apto || !cin) return;
 
-        const { data: lista } = await supabaseClient.from('reservas').select('guest_principal, data_checkin, data_checkout').eq('apto_id', apto);
+        // Ao editar, ignoramos a própria reserva na busca de conflitos
+        let lista = reservasGlobais.filter(r => r.apto_id === apto && r.id !== editId);
 
-        const cIn = (lista || []).find(r => cin >= fmt(r.data_checkin) && cin < fmt(r.data_checkout));
+        const cIn = lista.find(r => cin >= fmt(r.data_checkin) && cin < fmt(r.data_checkout));
         if (cIn) {
             mostrarModal('modalErro', `O apto já estará ocupado por ${cIn.guest_principal}.`, 'msgErro');
             document.getElementById('data_checkin').value = ""; return;
         }
 
         if (!cout) return;
-        const cGeral = (lista || []).find(r => cin < fmt(r.data_checkout) && cout > fmt(r.data_checkin));
+        const cGeral = lista.find(r => cin < fmt(r.data_checkout) && cout > fmt(r.data_checkin));
         if (cGeral) {
-            mostrarModal('modalErro', `Bloqueado: Conflito com ${cGeral.guest_principal}.`, 'msgErro');
+            mostrarModal('modalErro', `Bloqueado: Conflito com a reserva de ${cGeral.guest_principal}.`, 'msgErro');
             document.getElementById('data_checkout').value = ""; return;
         }
 
@@ -205,12 +267,13 @@
         if (noites < minNoites && !alertaAceito && noites > 0) mostrarModal('modalAlerta', `Estadia curta (${noites} noites).`, 'msgAlerta');
     }
 
-    function mostrarModal(id, msg, idT) { document.getElementById(idT).innerText = msg; document.getElementById(id).style.display = 'flex'; }
+    function mostrarModal(id, msg, idT) { if(idT) document.getElementById(idT).innerText = msg; document.getElementById(id).style.display = 'flex'; }
     function fecharModais() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
     function confirmarAlerta() { alertaAceito = true; fecharModais(); verificarReserva(); }
     function limparDatas() { document.getElementById('data_checkin').value = ""; document.getElementById('data_checkout').value = ""; fecharModais(); }
 
     async function salvarFinal() {
+        const id = document.getElementById('edit_id').value;
         const r = {
             apto_id: document.getElementById('apto_id').value,
             guest_principal: document.getElementById('guest_principal').value,
@@ -223,9 +286,18 @@
             valor_comissao: document.getElementById('valor_comissao').value || 0,
             observacoes: document.getElementById('observacoes').value
         };
-        const { error } = await supabaseClient.from('reservas').insert([r]);
-        if (!error) document.getElementById('modalSucesso').style.display = 'flex';
-        else alert("Erro: " + error.message);
+
+        let result;
+        if (id) {
+            result = await supabaseClient.from('reservas').update(r).eq('id', id);
+            document.getElementById('msgSucessoTxt').innerText = "Reserva atualizada com sucesso!";
+        } else {
+            result = await supabaseClient.from('reservas').insert([r]);
+            document.getElementById('msgSucessoTxt').innerText = "Reserva cadastrada com sucesso!";
+        }
+
+        if (!result.error) document.getElementById('modalSucesso').style.display = 'flex';
+        else alert("Erro: " + result.error.message);
     }
     init();
 </script>
