@@ -18,14 +18,21 @@
         .btn-extras { background-color: #3182ce; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; font-size: 14px; }
         #secao-extras { display: none; background: #f8fafc; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 18px; }
         
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-box { background: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; }
-        .modal-box h3 { margin-top: 0; color: #e53e3e; }
-        .modal-box.alerta h3 { color: #d69e2e; }
-        .btn-modal { padding: 10px 25px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin: 5px; }
-        .btn-ok { background: #e53e3e; color: white; }
+        /* Sistema de Modais Customizados */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-box { background: white; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .modal-box h3 { margin-top: 0; font-size: 22px; }
+        
+        /* Cores dos Modais */
+        .modal-erro h3 { color: #e53e3e; }
+        .modal-alerta h3 { color: #d69e2e; }
+        .modal-sucesso h3 { color: #38a169; }
+        
+        .btn-modal { padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; margin: 10px 5px 0 5px; }
+        .btn-ok-erro { background: #e53e3e; color: white; }
         .btn-continuar { background: #38a169; color: white; }
         .btn-cancelar { background: #718096; color: white; }
+        .btn-ok-sucesso { background: #38a169; color: white; width: 100%; }
     </style>
 </head>
 <body>
@@ -40,7 +47,7 @@
 
     <div class="campo">
         <label>Hóspede Principal (Guest) *</label>
-        <input type="text" id="guest_principal">
+        <input type="text" id="guest_principal" placeholder="Ex: João Silva">
     </div>
 
     <div style="display: flex; gap: 15px;">
@@ -70,7 +77,7 @@
         </select>
     </div>
 
-    <button type="button" class="btn-extras" onclick="toggleExtras()">+ Adicionar hóspedes extras</button>
+    <button type="button" class="btn-extras" onclick="toggleExtras()">+ Adicionar hóspedes extras / Infos</button>
 
     <div id="secao-extras">
         <div class="campo"><label>Guest 2</label><input type="text" id="guest_2"></div>
@@ -84,27 +91,37 @@
 
     <div class="campo">
         <label>Valor Creditado (R$)</label>
-        <input type="number" step="0.01" id="valor_creditado">
+        <input type="number" step="0.01" id="valor_creditado" placeholder="0.00">
     </div>
 
     <button id="btnSalvar" class="btn-salvar" onclick="salvarFinal()">Salvar Reserva</button>
 </div>
 
-<!-- Modais -->
+<!-- MODAL DE ERRO (BLOQUEIO) -->
 <div id="modalErro" class="modal-overlay">
-    <div class="modal-box">
-        <h3>Data Indisponível</h3>
+    <div class="modal-box modal-erro">
+        <h3>Indisponível</h3>
         <p id="msgErro"></p>
-        <button class="btn-modal btn-ok" onclick="fecharModais()">Corrigir</button>
+        <button class="btn-modal btn-ok-erro" onclick="fecharModais()">Corrigir</button>
     </div>
 </div>
 
+<!-- MODAL DE ALERTA (JANELA 4 DIAS) -->
 <div id="modalAlerta" class="modal-overlay">
-    <div class="modal-box alerta">
+    <div class="modal-box modal-alerta">
         <h3>Atenção</h3>
         <p id="msgAlerta"></p>
         <button class="btn-modal btn-continuar" onclick="confirmarAlerta()">Estou ciente / Continuar</button>
         <button class="btn-modal btn-cancelar" onclick="limparDatas()">Corrigir Datas</button>
+    </div>
+</div>
+
+<!-- NOVO MODAL DE SUCESSO -->
+<div id="modalSucesso" class="modal-overlay">
+    <div class="modal-box modal-sucesso">
+        <h3>✔ Sucesso!</h3>
+        <p id="msgSucesso">A reserva foi salva corretamente.</p>
+        <button class="btn-modal btn-ok-sucesso" onclick="recarregarPagina()">OK</button>
     </div>
 </div>
 
@@ -136,41 +153,34 @@
         const apto = document.getElementById('apto_id').value;
         const checkin = document.getElementById('data_checkin').value;
         const checkout = document.getElementById('data_checkout').value;
-        const btn = document.getElementById('btnSalvar');
 
         if (!apto || !checkin) return;
 
-        // 1. VALIDAÇÃO IMEDIATA DO CHECK-IN
-        // Verifica se a data de check-in cai DENTRO de uma reserva existente
-        // (A reserva é considerada ocupada do Check-in até o dia ANTERIOR ao Check-out)
         const { data: conflitoCheckin } = await supabaseClient.from('reservas')
-            .select('guest_principal, data_checkout')
+            .select('guest_principal')
             .eq('apto_id', apto)
             .lte('data_checkin', checkin)
-            .gt('data_checkout', checkin); // Check-in está entre In e Out (não inclusive o Out)
+            .gt('data_checkout', checkin);
 
         if (conflitoCheckin.length > 0) {
-            mostrarErro(`Não é possível fazer check-in nesta data. O apartamento estará ocupado por ${conflitoCheckin[0].guest_principal} até as 11h deste dia.`);
+            mostrarModal('modalErro', `Não é possível fazer check-in nesta data. O apartamento estará ocupado por ${conflitoCheckin[0].guest_principal}.`, 'msgErro');
             document.getElementById('data_checkin').value = "";
             return;
         }
 
-        // Se o checkout ainda não foi preenchido, paramos aqui
         if (!checkout) return;
 
-        // 2. VALIDAÇÃO DO PERÍODO COMPLETO (Se o checkout foi preenchido)
         const inDate = new Date(checkin);
         const outDate = new Date(checkout);
         const diffDays = Math.ceil(Math.abs(outDate - inDate) / (1000 * 60 * 60 * 24));
         document.getElementById('noites').value = outDate > inDate ? diffDays : "Data inválida";
 
         if (outDate <= inDate) {
-            mostrarErro("O Check-out deve ser posterior ao Check-in.");
+            mostrarModal('modalErro', "O Check-out deve ser posterior ao Check-in.", 'msgErro');
             document.getElementById('data_checkout').value = "";
             return;
         }
 
-        // Verifica se existe qualquer reserva que comece antes do meu checkout e termine após meu checkin
         const { data: conflitoPeriodo } = await supabaseClient.from('reservas')
             .select('guest_principal')
             .eq('apto_id', apto)
@@ -178,12 +188,11 @@
             .gt('data_checkout', checkin);
 
         if (conflitoPeriodo.length > 0) {
-            mostrarErro(`Conflito: O período selecionado sobrepõe a reserva de ${conflitoPeriodo[0].guest_principal}.`);
+            mostrarModal('modalErro', `Conflito: O período selecionado sobrepõe a reserva de ${conflitoPeriodo[0].guest_principal}.`, 'msgErro');
             document.getElementById('data_checkout').value = "";
             return;
         }
 
-        // 3. REGRA DAS 4 NOITES (ALERTA)
         const dataFimJanela = new Date(checkin);
         dataFimJanela.setDate(dataFimJanela.getDate() + minNoitesAlerta);
         const dataFimStr = dataFimJanela.toISOString().split('T')[0];
@@ -195,34 +204,19 @@
             .lte('data_checkin', dataFimStr);
 
         if (proximos.length > 0 && !alertaConfirmado) {
-            mostrarAlerta(`Atenção: Existe uma reserva começando em breve (nas próximas ${minNoitesAlerta} noites).`);
+            mostrarModal('modalAlerta', `Atenção: Existe uma reserva começando nas próximas ${minNoitesAlerta} noites.`, 'msgAlerta');
         }
     }
 
-    function mostrarErro(msg) {
-        document.getElementById('msgErro').innerText = msg;
-        document.getElementById('modalErro').style.display = 'flex';
+    function mostrarModal(id, msg, idTexto) {
+        document.getElementById(idTexto).innerText = msg;
+        document.getElementById(id).style.display = 'flex';
     }
 
-    function mostrarAlerta(msg) {
-        document.getElementById('msgAlerta').innerText = msg;
-        document.getElementById('modalAlerta').style.display = 'flex';
-    }
-
-    function fecharModais() {
-        document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
-    }
-
-    function confirmarAlerta() {
-        alertaConfirmado = true;
-        fecharModais();
-    }
-
-    function limparDatas() {
-        document.getElementById('data_checkin').value = "";
-        document.getElementById('data_checkout').value = "";
-        fecharModais();
-    }
+    function fecharModais() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+    function confirmarAlerta() { alertaConfirmado = true; fecharModais(); }
+    function limparDatas() { document.getElementById('data_checkin').value = ""; document.getElementById('data_checkout').value = ""; fecharModais(); }
+    function recarregarPagina() { location.reload(); }
 
     async function salvarFinal() {
         const apto = document.getElementById('apto_id').value;
@@ -231,7 +225,7 @@
         const checkout = document.getElementById('data_checkout').value;
 
         if (!apto || !guest || !checkin || !checkout) {
-            mostrarErro("Preencha todos os campos obrigatórios (*)");
+            mostrarModal('modalErro', "Preencha todos os campos obrigatórios (*)", 'msgErro');
             return;
         }
 
@@ -251,10 +245,9 @@
 
         const { error } = await supabaseClient.from('reservas').insert([reserva]);
         if (error) {
-            mostrarErro("Erro ao salvar: " + error.message);
+            mostrarModal('modalErro', "Erro ao salvar: " + error.message, 'msgErro');
         } else {
-            alert("Reserva salva com sucesso!");
-            location.reload();
+            document.getElementById('modalSucesso').style.display = 'flex';
         }
     }
 </script>
