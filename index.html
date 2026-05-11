@@ -93,6 +93,9 @@
     let alertaAceito = false;
     const diasSemanaNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
+    // Limpa qualquer dado extra de hora/timezone e retorna apenas AAAA-MM-DD
+    function limparData(d) { if(!d) return ""; return d.toString().substring(0,10); }
+
     async function init() {
         const { data: aptos } = await supabaseClient.from('apartamentos').select('id, nome_apto').order('nome_apto');
         aptosGlobais = aptos;
@@ -144,26 +147,26 @@
                 const dIso = new Date(ano, mes, d).toISOString().split('T')[0];
                 const ontemIso = new Date(ano, mes, d - 1).toISOString().split('T')[0];
                 
-                const saindoH = reservas.find(r => r.apto_id === apto.id && r.data_checkout === dIso);
-                const entrandoH = reservas.find(r => r.apto_id === apto.id && r.data_checkin === dIso);
+                const saindoH = reservas.find(r => r.apto_id === apto.id && limparData(r.data_checkout) === dIso);
+                const entrandoH = reservas.find(r => r.apto_id === apto.id && limparData(r.data_checkin) === dIso);
 
                 if (saindoH && entrandoH) {
                     html += `<td class="reserva-vinho"></td>`;
                 } else {
-                    const resA = reservas.find(r => r.apto_id === apto.id && dIso >= r.data_checkin && dIso < r.data_checkout);
+                    const resA = reservas.find(r => r.apto_id === apto.id && dIso >= limparData(r.data_checkin) && dIso < limparData(r.data_checkout));
                     if (resA) {
                         let ok = false;
-                        const tOntem = reservas.find(r => r.apto_id === apto.id && r.data_checkout === ontemIso) && reservas.find(r => r.apto_id === apto.id && r.data_checkin === ontemIso);
-                        if (dIso === resA.data_checkin && !saindoH) ok = true;
-                        else if (tOntem && resA.data_checkin === ontemIso) ok = true;
+                        const tOntem = reservas.find(r => r.apto_id === apto.id && limparData(r.data_checkout) === ontemIso) && reservas.find(r => r.apto_id === apto.id && limparData(r.data_checkin) === ontemIso);
+                        if (dIso === limparData(resA.data_checkin) && !saindoH) ok = true;
+                        else if (tOntem && limparData(resA.data_checkin) === ontemIso) ok = true;
                         else if (d === 1) ok = true;
 
                         if (ok) {
                             let dur = 0; let tempD = d;
                             while(tempD <= ultimoDia) {
                                 const dL = new Date(ano, mes, tempD).toISOString().split('T')[0];
-                                if (dL < resA.data_checkin || dL >= resA.data_checkout) break;
-                                if (reservas.find(r=>r.apto_id===apto.id && r.data_checkout===dL) && reservas.find(r=>r.apto_id===apto.id && r.data_checkin===dL) && tempD > d) break;
+                                if (dL < limparData(resA.data_checkin) || dL >= limparData(resA.data_checkout)) break;
+                                if (reservas.find(r=>r.apto_id===apto.id && limparData(r.data_checkout)===dL) && reservas.find(r=>r.apto_id===apto.id && limparData(r.data_checkin)===dL) && tempD > d) break;
                                 dur++; tempD++;
                             }
                             const cod = getCodigoOrigem(resA.origem);
@@ -182,19 +185,22 @@
     function mudarMes(v) { mesBase.setMonth(mesBase.getMonth() + v); renderizarMapaTriplo(); }
     function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
 
-    // VALIDAÇÃO POR TEXTO (AAAA-MM-DD) - IGNRORA FUSOS E MILISSEGUNDOS
+    // VALIDAÇÃO CORRIGIDA - COMPARA APENAS A DATA (IGNORA HORA/TIMEZONE DO BANCO)
     async function verificarReserva() {
         const apto = document.getElementById('apto_id').value;
-        const cin = document.getElementById('data_checkin').value; // Ex: "2026-05-15"
+        const cin = document.getElementById('data_checkin').value; 
         const cout = document.getElementById('data_checkout').value;
         
         if (!apto || !cin) return;
 
         const { data: lista } = await supabaseClient.from('reservas').select('guest_principal, data_checkin, data_checkout').eq('apto_id', apto);
 
-        // 1. Validar Check-in: Bloqueia se cin >= r.In E cin < r.Out
-        // Se cin == r.Out, a comparação cin < r.Out é FALSA, permitindo o giro.
-        const cIn = (lista || []).find(r => cin >= r.data_checkin && cin < r.data_checkout);
+        // 1. Validar Check-in: Bloqueia se cin estiver no intervalo [In, Out)
+        const cIn = (lista || []).find(r => {
+            const rIn = limparData(r.data_checkin);
+            const rOut = limparData(r.data_checkout);
+            return cin >= rIn && cin < rOut;
+        });
 
         if (cIn) {
             mostrarModal('modalErro', `O apto já estará ocupado por ${cIn.guest_principal}.`, 'msgErro');
@@ -204,8 +210,12 @@
 
         if (!cout) return;
 
-        // 2. Validar Período Total: Bloqueia se houver sobreposição
-        const cGeral = (lista || []).find(r => cin < r.data_checkout && cout > r.data_checkin);
+        // 2. Validar Período Total: Bloqueia se houver sobreposição real
+        const cGeral = (lista || []).find(r => {
+            const rIn = limparData(r.data_checkin);
+            const rOut = limparData(r.data_checkout);
+            return cin < rOut && cout > rIn;
+        });
 
         if (cGeral) {
             mostrarModal('modalErro', `Conflito com a reserva de ${cGeral.guest_principal}.`, 'msgErro');
