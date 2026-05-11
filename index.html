@@ -29,9 +29,10 @@
         
         .col-apto { width: 125px; text-align: left; padding-left: 5px; background: #f8f9fa; font-weight: bold; font-size: 9px; }
         .cabecalho-dias { background: #2d3748; color: white; height: 18px; }
-        .cabecalho-semana { background: #cbd5e0; color: #4a5568; height: 16px; font-size: 8px; font-weight: bold; }
+        .cabecalho-semana { background: #f1f5f9; color: #4a5568; height: 16px; font-size: 8px; font-weight: bold; }
         
-        .reserva-p, .reserva-d { font-size: 11px; font-weight: 600; padding: 0 4px; }
+        /* Estilo das Reservas no Mapa */
+        .reserva-p, .reserva-d { font-size: 11px; font-weight: 600; padding: 0 4px; border-radius: 2px; }
         .reserva-p { background-color: var(--cor-p); color: #000; }
         .reserva-d { background-color: var(--cor-d); color: #000; }
         .reserva-vinho { background-color: var(--cor-vinho); border: none; } 
@@ -177,6 +178,7 @@
     function mudarMes(v) { mesBase.setMonth(mesBase.getMonth() + v); renderizarMapaTriplo(); }
     function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
 
+    // VALIDAÇÃO CORRIGIDA (SEM ERROS DE GIRO/TURNOVER)
     async function verificarReserva() {
         const apto = document.getElementById('apto_id').value;
         const cin = document.getElementById('data_checkin').value;
@@ -184,29 +186,25 @@
         
         if (!apto || !cin) return;
 
-        // 1. Validação Imediata do Check-in (Alertar se a data já estiver ocupada)
-        const { data: conflitoCheckin } = await supabaseClient.from('reservas').select('guest_principal')
-            .eq('apto_id', apto)
-            .lte('data_checkin', cin)
-            .gt('data_checkout', cin);
+        // Buscamos todas as reservas do apartamento para conferir no navegador (mais preciso)
+        const { data: reservasApto } = await supabaseClient.from('reservas').select('guest_principal, data_checkin, data_checkout').eq('apto_id', apto);
 
-        if (conflitoCheckin.length > 0) {
-            mostrarModal('modalErro', `Indisponível: O apto já está ocupado por ${conflitoCheckin[0].guest_principal}.`, 'msgErro');
+        // 1. Validar Check-in imediato (Giro é permitido!)
+        const conflitoIn = reservasApto.find(r => cin >= r.data_checkin && cin < r.data_checkout);
+
+        if (conflitoIn) {
+            mostrarModal('modalErro', `Indisponível: O apto já está ocupado por ${conflitoIn.guest_principal}.`, 'msgErro');
             document.getElementById('data_checkin').value = "";
             return;
         }
 
         if (!cout) return;
 
-        // 2. Validação do Período Inteiro (Strict Check)
-        // Regra: Novo In < Antigo Out E Novo Out > Antigo In
-        const { data: conflitoGeral } = await supabaseClient.from('reservas').select('guest_principal')
-            .eq('apto_id', apto)
-            .lt('data_checkin', cout)
-            .gt('data_checkout', cin);
+        // 2. Validar Período Completo (Conflito de sobreposição)
+        const conflitoGeral = reservasApto.find(r => cin < r.data_checkout && cout > r.data_checkin);
 
-        if (conflitoGeral.length > 0) {
-            mostrarModal('modalErro', `Bloqueado: Conflito com a reserva de ${conflitoGeral[0].guest_principal}.`, 'msgErro');
+        if (conflitoGeral) {
+            mostrarModal('modalErro', `Bloqueado: Conflito com a reserva de ${conflitoGeral.guest_principal}.`, 'msgErro');
             document.getElementById('data_checkout').value = "";
             return;
         }
