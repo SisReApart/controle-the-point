@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel The Point - Multi-Mapa</title>
+    <title>Painel The Point - Hotel Management</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --cor-p: #add8e6; --cor-d: #fff700; --cor-vinho: #800020; --cor-borda: #ddd; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; overflow: hidden; }
         
-        /* Sidebar lateral */
+        /* Lateral */
         .sidebar { width: 280px; background: white; padding: 12px; border-right: 1px solid #ddd; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.05); flex-shrink: 0; }
         .sidebar h2 { font-size: 0.9rem; margin-top: 0; color: #2c3e50; border-bottom: 2px solid #38a169; padding-bottom: 5px; }
         .campo { margin-bottom: 8px; }
@@ -17,13 +17,13 @@
         input, select, textarea { width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; font-size: 12px; }
         .btn-salvar { width: 100%; padding: 10px; background: #38a169; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 13px; }
         
-        /* Painel Principal */
+        /* Centro */
         .main-content { flex: 1; padding: 5px 10px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; background: #edf2f7; }
         .topo-controles { display: flex; justify-content: center; align-items: center; margin-bottom: 5px; gap: 8px; position: sticky; top: 0; z-index: 100; background: #edf2f7; padding: 3px; }
         .btn-nav { padding: 5px 10px; cursor: pointer; background: white; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold; font-size: 11px; }
         .btn-hoje { background: #3182ce; color: white; border: none; }
 
-        .mes-container { margin-bottom: 15px; background: white; border-radius: 6px; padding: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
+        .mes-container { margin-bottom: 15px; background: white; border-radius: 6px; padding: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); }
         .titulo-mes-tabela { font-weight: bold; color: #2d3748; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; padding-left: 5px; }
         
         table { border-collapse: collapse; width: 100%; table-layout: fixed; }
@@ -31,9 +31,10 @@
         
         .col-apto { width: 135px; text-align: left; padding-left: 8px; background: #f8f9fa; font-weight: bold; font-size: 9px; }
         .cabecalho-dias { background: #2d3748; color: white; height: 18px; }
-        .cabecalho-semana { background: #f1f5f9; color: #4a5568; height: 16px; font-size: 8px; font-weight: bold; }
+        .cabecalho-semana { background: #f1f5f9; color: #4a5568; height: 16px; font-size: 8px; font-weight: bold; border-bottom: 1px solid #eee; }
         
-        .reserva-p, .reserva-d { font-size: 11px; font-weight: 600; padding: 0 4px; }
+        /* Reservas no Mapa */
+        .reserva-p, .reserva-d { font-size: 12px; font-weight: bold; padding: 0 4px; border-radius: 2px; }
         .reserva-p { background-color: var(--cor-p); color: #000; }
         .reserva-d { background-color: var(--cor-d); color: #000; }
         .reserva-vinho { background-color: var(--cor-vinho); border: none; } 
@@ -77,7 +78,6 @@
     <div id="area-mapas"></div>
 </div>
 
-<!-- Modais -->
 <div id="modalErro" class="modal-overlay"><div class="modal-box"><h3 style="color:#e53e3e">Bloqueado</h3><p id="msgErro"></p><button class="btn-modal" style="background:#e53e3e;color:white" onclick="fecharModais()">OK</button></div></div>
 <div id="modalAlerta" class="modal-overlay"><div class="modal-box"><h3 style="color:#d69e2e">Atenção</h3><p id="msgAlerta"></p><button class="btn-modal" style="background:#38a169;color:white" onclick="confirmarAlerta()">Continuar</button><button class="btn-modal" style="background:#718096;color:white" onclick="limparDatas()">Corrigir</button></div></div>
 <div id="modalSucesso" class="modal-overlay"><div class="modal-box"><h3>✔ Sucesso!</h3><p>Reserva cadastrada.</p><button class="btn-modal" style="background:#38a169;color:white" onclick="location.reload()">OK</button></div></div>
@@ -93,8 +93,8 @@
     let alertaAceito = false;
     const diasSemanaNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-    // Pega apenas YYYY-MM-DD de qualquer data vinda do banco ou sistema
-    function formatar(d) { if(!d) return ""; return d.toString().split('T')[0].split(' ')[0]; }
+    // Limpeza radical de data: retorna apenas o texto AAAA-MM-DD
+    function fmt(d) { if(!d) return ""; return d.toString().split('T')[0].split(' ')[0].trim(); }
 
     async function init() {
         const { data: aptos } = await supabaseClient.from('apartamentos').select('id, nome_apto').order('nome_apto');
@@ -125,10 +125,8 @@
     function criarTabelaMes(dataRef, reservas) {
         const ano = dataRef.getFullYear(); const mes = dataRef.getMonth();
         const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-        const container = document.createElement('div');
-        container.className = 'mes-container';
-        const titulo = document.createElement('div');
-        titulo.className = 'titulo-mes-tabela';
+        const container = document.createElement('div'); container.className = 'mes-container';
+        const titulo = document.createElement('div'); titulo.className = 'titulo-mes-tabela';
         titulo.innerText = dataRef.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
         container.appendChild(titulo);
 
@@ -136,8 +134,7 @@
         for (let d = 1; d <= ultimoDia; d++) html += `<th>${d}</th>`;
         html += `</tr><tr class="cabecalho-semana"><th class="col-apto">Apartamento</th>`;
         for (let d = 1; d <= ultimoDia; d++) {
-            const sem = diasSemanaNomes[new Date(ano, mes, d).getDay()];
-            html += `<th>${sem}</th>`;
+            html += `<th>${diasSemanaNomes[new Date(ano, mes, d).getDay()]}</th>`;
         }
         html += `</tr></thead><tbody>`;
 
@@ -147,26 +144,26 @@
                 const dIso = new Date(ano, mes, d).toISOString().split('T')[0];
                 const ontemIso = new Date(ano, mes, d - 1).toISOString().split('T')[0];
                 
-                const saindoH = (reservas || []).find(r => r.apto_id === apto.id && formatar(r.data_checkout) === dIso);
-                const entrandoH = (reservas || []).find(r => r.apto_id === apto.id && formatar(r.data_checkin) === dIso);
+                const saindoH = (reservas || []).find(r => r.apto_id === apto.id && fmt(r.data_checkout) === dIso);
+                const entrandoH = (reservas || []).find(r => r.apto_id === apto.id && fmt(r.data_checkin) === dIso);
 
                 if (saindoH && entrandoH) {
                     html += `<td class="reserva-vinho"></td>`;
                 } else {
-                    const resA = (reservas || []).find(r => r.apto_id === apto.id && dIso >= formatar(r.data_checkin) && dIso < formatar(r.data_checkout));
+                    const resA = (reservas || []).find(r => r.apto_id === apto.id && dIso >= fmt(r.data_checkin) && dIso < fmt(r.data_checkout));
                     if (resA) {
                         let ok = false;
-                        const tOntem = (reservas || []).find(r => r.apto_id === apto.id && formatar(r.data_checkout) === ontemIso) && (reservas || []).find(r => r.apto_id === apto.id && formatar(r.data_checkin) === ontemIso);
-                        if (dIso === formatar(resA.data_checkin) && !saindoH) ok = true;
-                        else if (tOntem && dIso === formatar(resA.data_checkin)) ok = true;
+                        const tOntem = (reservas || []).find(r => r.apto_id === apto.id && fmt(r.data_checkout) === ontemIso) && (reservas || []).find(r => r.apto_id === apto.id && fmt(r.data_checkin) === ontemIso);
+                        if (dIso === fmt(resA.data_checkin) && !saindoH) ok = true;
+                        else if (tOntem && dIso === fmt(resA.data_checkin)) ok = true;
                         else if (d === 1) ok = true;
 
                         if (ok) {
                             let dur = 0; let tempD = d;
                             while(tempD <= ultimoDia) {
                                 const dL = new Date(ano, mes, tempD).toISOString().split('T')[0];
-                                if (dL < formatar(resA.data_checkin) || dL >= formatar(resA.data_checkout)) break;
-                                if ((reservas || []).find(r=>r.apto_id===apto.id && formatar(r.data_checkout)===dL) && (reservas || []).find(r=>r.apto_id===apto.id && formatar(r.data_checkin)===dL) && tempD > d) break;
+                                if (dL < fmt(resA.data_checkin) || dL >= fmt(resA.data_checkout)) break;
+                                if ((reservas || []).find(r=>r.apto_id===apto.id && fmt(r.data_checkout)===dL) && (reservas || []).find(r=>r.apto_id===apto.id && fmt(r.data_checkin)===dL) && tempD > d) break;
                                 dur++; tempD++;
                             }
                             const cod = getCodigoOrigem(resA.origem);
@@ -185,45 +182,44 @@
     function mudarMes(v) { mesBase.setMonth(mesBase.getMonth() + v); renderizarMapaTriplo(); }
     function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
 
-    // VALIDAÇÃO CORRIGIDA - COMPARA APENAS TEXTO "YYYY-MM-DD"
+    // VALIDAÇÃO POR COMPARAÇÃO DE TEXTO PURO (SEM BLOQUEIO DE TURNOVER)
     async function verificarReserva() {
         const apto = document.getElementById('apto_id').value;
-        const cin = formatar(document.getElementById('data_checkin').value); 
-        const cout = formatar(document.getElementById('data_checkout').value);
+        const cin = fmt(document.getElementById('data_checkin').value); 
+        const cout = fmt(document.getElementById('data_checkout').value);
         
         if (!apto || !cin) return;
 
         const { data: lista } = await supabaseClient.from('reservas').select('guest_principal, data_checkin, data_checkout').eq('apto_id', apto);
 
-        // 1. Validar Check-in: Bloqueia apenas se cin >= r.In E cin < r.Out
-        // Se cin for igual a r.Out (Giro), a condição cin < r.Out será falsa, permitindo a reserva.
+        // 1. Validar Check-in: Bloqueia se o check-in estiver DENTRO de uma reserva existente
+        // Regra do Giro: Se cin == rOut, o conflito cin < rOut é FALSO. Logo, PERMITE o giro.
         const cIn = (lista || []).find(r => {
-            const rIn = formatar(r.data_checkin);
-            const rOut = formatar(r.data_checkout);
+            const rIn = fmt(r.data_checkin);
+            const rOut = fmt(r.data_checkout);
             return cin >= rIn && cin < rOut;
         });
 
         if (cIn) {
-            mostrarModal('modalErro', `Indisponível: O apto já está ocupado por ${cIn.guest_principal}.`, 'msgErro');
-            document.getElementById('data_checkin').value = "";
-            return;
+            mostrarModal('modalErro', `O apartamento já estará ocupado por ${cIn.guest_principal}.`, 'msgErro');
+            document.getElementById('data_checkin').value = ""; return;
         }
 
         if (!cout) return;
 
-        // 2. Validar Período Total: Bloqueia se houver sobreposição real de datas
+        // 2. Validar Sobreposição Geral: cin < rOut && cout > rIn
         const cGeral = (lista || []).find(r => {
-            const rIn = formatar(r.data_checkin);
-            const rOut = formatar(r.data_checkout);
+            const rIn = fmt(r.data_checkin);
+            const rOut = fmt(r.data_checkout);
             return cin < rOut && cout > rIn;
         });
 
         if (cGeral) {
             mostrarModal('modalErro', `Bloqueado: Conflito com a reserva de ${cGeral.guest_principal}.`, 'msgErro');
-            document.getElementById('data_checkout').value = "";
-            return;
+            document.getElementById('data_checkout').value = ""; return;
         }
 
+        // Cálculo de Noites
         const inD = new Date(cin + "T12:00:00"); 
         const outD = new Date(cout + "T12:00:00");
         const noites = Math.round((outD - inD) / (1000 * 60 * 60 * 24));
