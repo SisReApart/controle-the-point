@@ -6,7 +6,8 @@
     <title>Painel The Point - Gestão Completa</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --cor-p: #add8e6; --cor-d: #fff700; --cor-vinho: #800020; --cor-borda: #ddd; }
+        /* COR P ALTERADA PARA AZUL MAIS FORTE (Melhor contraste em P&B) */
+        :root { --cor-p: #4299e1; --cor-d: #fff700; --cor-vinho: #800020; --cor-borda: #ddd; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; overflow: hidden; }
         
         /* SIDEBAR */
@@ -61,36 +62,25 @@
             #area-impressao, #area-impressao * { visibility: visible; }
             #area-impressao { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; }
             
-            /* Mapa (Paisagem) */
+            /* Mapa (Paisagem) - Altura reduzida para caber 4 meses por folha */
             .print-mapa { page-break-after: always; width: 100%; }
             .mes-print { margin-bottom: 10px !important; border: 1px solid #000 !important; }
-            .mes-print table td { height: 38px !important; font-size: 10px !important; }
+            .mes-print table td { 
+                height: 30px !important; /* REDUZIDO PARA CABER 4 MESES */
+                font-size: 10px !important; 
+                line-height: 30px !important;
+            }
 
             /* Faxina (Retrato) */
             .faxina-folha { padding: 0.5in; font-family: Arial, sans-serif; }
             .faxina-titulo { font-size: 24px; font-weight: normal; margin-bottom: 20px; text-transform: uppercase; }
             .faxina-tabela { width: 100%; border: 1px solid black; border-collapse: collapse; table-layout: fixed; }
-            
-            /* Cabeçalho Faxina */
-            .faxina-tabela th { 
-                background-color: #999 !important; 
-                color: black; 
-                border: 1px solid black; 
-                padding: 8px 5px; 
-                font-weight: bold; 
-                font-size: 16px !important; /* Mesma fonte do total */
-            }
-            
-            /* Células Faxina */
+            .faxina-tabela th { background-color: #999 !important; color: black; border: 1px solid black; padding: 8px 5px; font-weight: bold; font-size: 16px !important; }
             .faxina-tabela td { border: 1px solid black; padding: 6px; font-size: 14px !important; }
-            
-            /* Ajuste de colunas solicitado */
             .col-item { width: 45px; text-align: center; }
             .col-data { width: 110px; text-align: center; }
             .col-apto-print { text-align: left !important; padding-left: 10px !important; overflow: hidden; white-space: nowrap; }
             .col-valor-print { width: 130px; text-align: right !important; padding-right: 10px !important; }
-            
-            /* Linha de Total */
             .row-total-label { text-align: right !important; padding-right: 10px !important; font-weight: bold; font-size: 16px !important; }
             .row-total-value { background-color: #999 !important; font-weight: bold; font-size: 16px !important; text-align: center !important; }
 
@@ -173,25 +163,14 @@
 
 <div id="area-impressao"></div>
 
-<!-- Modal Escolha Mês Faxina -->
+<!-- Modal Faxina -->
 <div id="modalFaxina" class="modal-overlay">
     <div class="modal-box">
         <h3>Relatório de Faxina</h3>
-        <div class="campo">
-            <label>Mês:</label>
-            <select id="sel_mes_faxina">
-                <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
-                <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
-                <option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option>
-                <option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option>
-            </select>
-        </div>
-        <div class="campo">
-            <label>Ano:</label>
-            <input type="number" id="sel_ano_faxina" value="2026">
-        </div>
+        <div class="campo"><label>Mês:</label><select id="sel_mes_faxina"><option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option><option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option><option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option><option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option></select></div>
+        <div class="campo"><label>Ano:</label><input type="number" id="sel_ano_faxina" value="2026"></div>
         <button class="btn-modal" style="background:#38a169;color:white" onclick="gerarRelatorioFaxinaFinal()">Gerar</button>
-        <button class="btn-modal" style="background:#718096;color:white" onclick="fecharModais()">Sair</button>
+        <button class="btn-modal" onclick="fecharModais()">Sair</button>
     </div>
 </div>
 
@@ -270,98 +249,84 @@
         html += `</tbody></table>`; container.innerHTML += html; return container;
     }
 
-    // FAXINA
-    function abrirModalEscolhaFaxina() { document.getElementById('modalFaxina').style.display = 'flex'; }
+    // IMPRESSÃO MAPA (LÓGICA DINÂMICA ATÉ A ÚLTIMA RESERVA)
+    function imprimirMapa4Meses() {
+        const style = document.createElement('style');
+        style.innerHTML = "@page { size: letter landscape; margin: 0.2in; }";
+        document.head.appendChild(style);
 
+        const area = document.getElementById('area-impressao');
+        area.innerHTML = "";
+        
+        let dataInicio = new Date(mesBase.getFullYear(), mesBase.getMonth(), 1);
+        let dataFimReserva = new Date();
+
+        // Encontrar a data mais distante entre as reservas
+        reservasGlobais.forEach(r => {
+            let dOut = new Date(r.data_checkout + "T12:00:00");
+            if (dOut > dataFimReserva) dataFimReserva = dOut;
+        });
+
+        // Calcular quantos meses existem do início ao fim
+        let totalMeses = (dataFimReserva.getFullYear() - dataInicio.getFullYear()) * 12 + (dataFimReserva.getMonth() - dataInicio.getMonth()) + 1;
+        if (totalMeses < 4) totalMeses = 4; // Garantir pelo menos 1 folha
+
+        // Gerar páginas de 4 em 4
+        for (let i = 0; i < totalMeses; i += 4) {
+            const folha = document.createElement('div');
+            folha.className = 'print-mapa';
+            for (let j = 0; j < 4; j++) {
+                if (i + j < totalMeses) {
+                    const df = new Date(dataInicio.getFullYear(), dataInicio.getMonth() + i + j, 1);
+                    const mesBloco = criarTabelaMes(df, reservasGlobais);
+                    mesBloco.classList.add('mes-print');
+                    folha.appendChild(mesBloco);
+                }
+            }
+            area.appendChild(folha);
+        }
+        window.print();
+        style.remove();
+    }
+
+    // FAXINA E OUTROS
+    function abrirModalEscolhaFaxina() { document.getElementById('modalFaxina').style.display = 'flex'; }
     function gerarRelatorioFaxinaFinal() {
         const mesSel = parseInt(document.getElementById('sel_mes_faxina').value);
         const anoSel = parseInt(document.getElementById('sel_ano_faxina').value);
-        
         const area = document.getElementById('area-impressao');
         area.innerHTML = "";
         const dataRef = new Date(anoSel, mesSel, 1);
         const mesNome = dataRef.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-        
         let listaFaxinas = [];
         reservasGlobais.forEach(r => {
             const dOut = new Date(r.data_checkout + "T12:00:00");
             if (dOut.getMonth() === mesSel && dOut.getFullYear() === anoSel) {
                 const apto = aptosGlobais.find(a => a.id === r.apto_id);
-                listaFaxinas.push({
-                    data: r.data_checkout,
-                    apto: apto ? apto.nome_apto : "N/A",
-                    valor: apto ? (apto.preco_faxina || 0) : 0
-                });
+                listaFaxinas.push({ data: r.data_checkout, apto: apto ? apto.nome_apto : "N/A", valor: apto ? (apto.preco_faxina || 0) : 0 });
             }
         });
-
         listaFaxinas.sort((a, b) => new Date(a.data) - new Date(b.data));
-
         const folha = document.createElement('div');
         folha.className = 'faxina-folha';
-        
         let html = `<div class="faxina-titulo">Relatório de Faxinas - ${mesNome.toUpperCase()}</div>`;
-        html += `<table class="faxina-tabela">
-                    <thead>
-                        <tr>
-                            <th class="col-item">Item</th>
-                            <th class="col-data">Data:</th>
-                            <th class="col-apto-header">Apartamento:</th>
-                            <th class="col-valor-header">Valor:</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
-        
+        html += `<table class="faxina-tabela"><thead><tr><th class="col-item">Item</th><th class="col-data">Data:</th><th class="col-apto-header">Apartamento:</th><th class="col-valor-header">Valor:</th></tr></thead><tbody>`;
         let totalGeral = 0;
         listaFaxinas.forEach((f, idx) => {
-            const dataFmt = f.data.split('-').reverse().join('/');
-            html += `<tr>
-                        <td class="col-item">${idx + 1}</td>
-                        <td class="col-data">${dataFmt}</td>
-                        <td class="col-apto-print">${f.apto}</td>
-                        <td class="col-valor-print">$${f.valor.toFixed(2)}</td>
-                    </tr>`;
+            html += `<tr><td class="col-item">${idx + 1}</td><td class="col-data">${f.data.split('-').reverse().join('/')}</td><td class="col-apto-print">${f.apto}</td><td class="col-valor-print">$${f.valor.toFixed(2)}</td></tr>`;
             totalGeral += f.valor;
         });
-
-        html += `<tr>
-                    <td colspan="3" class="row-total-label">TOTAL GERAL A PAGAR NO MÊS: ➔</td>
-                    <td class="row-total-value">$${totalGeral.toFixed(2)}</td>
-                </tr>
-                </tbody></table>`;
-
+        html += `<tr><td colspan="3" class="row-total-label">TOTAL GERAL A PAGAR NO MÊS: ➔</td><td class="row-total-value">$${totalGeral.toFixed(2)}</td></tr></tbody></table>`;
         folha.innerHTML = html;
         area.appendChild(folha);
         fecharModais();
         window.print();
     }
 
-    // OUTRAS FUNÇÕES
     function fecharModais() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
     function mudarMes(v) { mesBase.setMonth(mesBase.getMonth() + v); renderizarMapaTriplo(); }
     function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
-    function toggleExtras() {
-        const div = document.getElementById('secao-extras');
-        div.style.display = (div.style.display === 'block') ? 'none' : 'block';
-    }
-
-    function imprimirMapa4Meses() {
-        const area = document.getElementById('area-impressao');
-        area.innerHTML = "";
-        let dataLoop = new Date(mesBase);
-        for (let i = 0; i < 8; i += 4) {
-            const folha = document.createElement('div');
-            folha.className = 'print-mapa';
-            for (let j = 0; j < 4; j++) {
-                const df = new Date(dataLoop.getFullYear(), dataLoop.getMonth() + i + j, 1);
-                const mesBloco = criarTabelaMes(df, reservasGlobais);
-                mesBloco.classList.add('mes-print');
-                folha.appendChild(mesBloco);
-            }
-            area.appendChild(folha);
-        }
-        window.print();
-    }
+    function toggleExtras() { const div = document.getElementById('secao-extras'); div.style.display = (div.style.display === 'block') ? 'none' : 'block'; }
 
     async function salvarFinal() {
         const id = document.getElementById('edit_id').value;
@@ -369,24 +334,7 @@
         const guest = document.getElementById('guest_principal').value;
         const cin = document.getElementById('data_checkin').value;
         const cout = document.getElementById('data_checkout').value;
-        const ori = document.getElementById('origem').value;
-
-        if (!apto || !guest || !cin || !cout || !ori) { mostrarModal('modalErro', "Preencha os campos obrigatórios"); return; }
-
-        const r = {
-            apto_id: apto, guest_principal: guest, data_checkin: cin, data_checkout: cout, noites: document.getElementById('noites').value, 
-            origem: ori, invoice_id: document.getElementById('invoice_id').value, ayrton_reserva_id: document.getElementById('ayrton_reserva_id').value,
-            num_adultos: document.getElementById('num_adultos').value, num_criancas: document.getElementById('num_criancas').value,
-            guest_2: document.getElementById('guest_2').value, guest_3: document.getElementById('guest_3').value,
-            guest_4: document.getElementById('guest_4').value, guest_5: document.getElementById('guest_5').value,
-            guest_6: document.getElementById('guest_6').value, codigo_porta_1: document.getElementById('codigo_porta_1').value,
-            codigo_porta_2: document.getElementById('codigo_porta_2').value, 
-            valor_creditado: document.getElementById('valor_creditado').value || 0, data_credito: document.getElementById('data_credito').value,
-            valor_comissao: document.getElementById('valor_comissao').value || 0, data_comissao: document.getElementById('data_comissao').value,
-            usuario_alterou: document.getElementById('usuario_alterou').value, data_alteracao: document.getElementById('data_alteracao').value,
-            observacoes: document.getElementById('observacoes').value
-        };
-
+        const r = { apto_id: apto, guest_principal: guest, data_checkin: cin, data_checkout: cout, noites: document.getElementById('noites').value, origem: document.getElementById('origem').value, invoice_id: document.getElementById('invoice_id').value, ayrton_reserva_id: document.getElementById('ayrton_reserva_id').value, num_adultos: document.getElementById('num_adultos').value, num_criancas: document.getElementById('num_criancas').value, guest_2: document.getElementById('guest_2').value, guest_3: document.getElementById('guest_3').value, guest_4: document.getElementById('guest_4').value, guest_5: document.getElementById('guest_5').value, guest_6: document.getElementById('guest_6').value, codigo_porta_1: document.getElementById('codigo_porta_1').value, codigo_porta_2: document.getElementById('codigo_porta_2').value, valor_creditado: document.getElementById('valor_creditado').value || 0, data_credito: document.getElementById('data_credito').value, valor_comissao: document.getElementById('valor_comissao').value || 0, data_comissao: document.getElementById('data_comissao').value, usuario_alterou: document.getElementById('usuario_alterou').value, data_alteracao: document.getElementById('data_alteracao').value, observacoes: document.getElementById('observacoes').value };
         const { error } = id ? await supabaseClient.from('reservas').update(r).eq('id', id) : await supabaseClient.from('reservas').insert([r]);
         if (!error) location.reload();
     }
@@ -409,12 +357,7 @@
     }
 
     function resetarFormulario() { location.reload(); }
-    async function excluirDeVez() {
-        const id = document.getElementById('edit_id').value;
-        await supabaseClient.from('reservas').delete().eq('id', id);
-        location.reload();
-    }
-    function mostrarModal(id, msg) { if(msg) document.getElementById('msgErro').innerText = msg; document.getElementById(id).style.display = 'flex'; }
+    async function excluirDeVez() { const id = document.getElementById('edit_id').value; await supabaseClient.from('reservas').delete().eq('id', id); location.reload(); }
 
     init();
 </script>
