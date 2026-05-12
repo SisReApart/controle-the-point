@@ -66,14 +66,35 @@
             .mes-print { margin-bottom: 10px !important; border: 1px solid #000 !important; }
             .mes-print table td { height: 38px !important; font-size: 10px !important; }
 
-            /* Faxina (Retrato - Estilo Modelo) */
+            /* Faxina (Retrato) */
             .faxina-folha { padding: 0.5in; font-family: Arial, sans-serif; }
             .faxina-titulo { font-size: 24px; font-weight: normal; margin-bottom: 20px; text-transform: uppercase; }
-            .faxina-tabela { width: 100%; border: 1px solid black; border-collapse: collapse; }
-            .faxina-tabela th { background-color: #999 !important; color: black; border: 1px solid black; padding: 5px; font-weight: normal; }
-            .faxina-tabela td { border: 1px solid black; padding: 5px; height: auto !important; font-size: 14px !important; text-align: center; }
-            .faxina-tabela td.text-right { text-align: right; padding-right: 10px; }
-            .faxina-tabela td.bg-gray { background-color: #999 !important; font-weight: bold; }
+            .faxina-tabela { width: 100%; border: 1px solid black; border-collapse: collapse; table-layout: fixed; }
+            
+            /* Cabeçalho Faxina */
+            .faxina-tabela th { 
+                background-color: #999 !important; 
+                color: black; 
+                border: 1px solid black; 
+                padding: 8px 5px; 
+                font-weight: bold; 
+                font-size: 16px !important; /* Mesma fonte do total */
+            }
+            
+            /* Células Faxina */
+            .faxina-tabela td { border: 1px solid black; padding: 6px; font-size: 14px !important; }
+            
+            /* Ajuste de colunas solicitado */
+            .col-item { width: 45px; text-align: center; }
+            .col-data { width: 110px; text-align: center; }
+            .col-apto-print { text-align: left !important; padding-left: 10px !important; overflow: hidden; white-space: nowrap; }
+            .col-valor-print { width: 130px; text-align: right !important; padding-right: 10px !important; }
+            
+            /* Linha de Total */
+            .row-total-label { text-align: right !important; padding-right: 10px !important; font-weight: bold; font-size: 16px !important; }
+            .row-total-value { background-color: #999 !important; font-weight: bold; font-size: 16px !important; text-align: center !important; }
+
+            .sidebar, .topo-controles, .modal-overlay { display: none !important; }
         }
     </style>
 </head>
@@ -152,10 +173,10 @@
 
 <div id="area-impressao"></div>
 
-<!-- Modal para Escolher Mês da Faxina -->
+<!-- Modal Escolha Mês Faxina -->
 <div id="modalFaxina" class="modal-overlay">
     <div class="modal-box">
-        <h3>Escolher Mês do Relatório</h3>
+        <h3>Relatório de Faxina</h3>
         <div class="campo">
             <label>Mês:</label>
             <select id="sel_mes_faxina">
@@ -169,15 +190,14 @@
             <label>Ano:</label>
             <input type="number" id="sel_ano_faxina" value="2026">
         </div>
-        <button class="btn-modal" style="background:#38a169;color:white" onclick="gerarRelatorioFaxinaFinal()">Gerar Relatório</button>
-        <button class="btn-modal" style="background:#718096;color:white" onclick="fecharModais()">Cancelar</button>
+        <button class="btn-modal" style="background:#38a169;color:white" onclick="gerarRelatorioFaxinaFinal()">Gerar</button>
+        <button class="btn-modal" style="background:#718096;color:white" onclick="fecharModais()">Sair</button>
     </div>
 </div>
 
-<!-- Outros Modais -->
-<div id="modalErro" class="modal-overlay"><div class="modal-box"><h3 style="color:#e53e3e">Aviso</h3><p id="msgErro"></p><button class="btn-modal" style="background:#e53e3e;color:white" onclick="fecharModais()">OK</button></div></div>
-<div id="modalSucesso" class="modal-overlay"><div class="modal-box"><h3>✔ Sucesso!</h3><p id="msgSucessoTxt"></p><button class="btn-modal" style="background:#38a169;color:white" onclick="location.reload()">OK</button></div></div>
-<div id="modalConfirmarExcluir" class="modal-overlay"><div class="modal-box"><h3>Excluir Reserva?</h3><p>Esta ação removerá os dados permanentemente.</p><button class="btn-modal" style="background:#e53e3e;color:white" onclick="excluirDeVez()">Confirmar Exclusão</button><button class="btn-modal" style="background:#718096;color:white" onclick="fecharModais()">Cancelar</button></div></div>
+<div id="modalErro" class="modal-overlay"><div class="modal-box"><h3 style="color:#e53e3e">Aviso</h3><p id="msgErro"></p><button class="btn-modal" onclick="fecharModais()">OK</button></div></div>
+<div id="modalSucesso" class="modal-overlay"><div class="modal-box"><h3>✔ Sucesso!</h3><p id="msgSucessoTxt"></p><button class="btn-modal" onclick="location.reload()">OK</button></div></div>
+<div id="modalConfirmarExcluir" class="modal-overlay"><div class="modal-box"><h3>Excluir?</h3><button class="btn-modal" onclick="excluirDeVez()">Confirmar</button><button class="btn-modal" onclick="fecharModais()">Cancelar</button></div></div>
 
 <script>
     const SB_URL = "https://eqoayyftpddombylgxpw.supabase.co";
@@ -200,7 +220,6 @@
         
         document.getElementById('sel_ano_faxina').value = new Date().getFullYear();
         document.getElementById('sel_mes_faxina').value = new Date().getMonth();
-
         renderizarMapaTriplo();
     }
 
@@ -251,24 +270,18 @@
         html += `</tbody></table>`; container.innerHTML += html; return container;
     }
 
-    // FAXINA FUNÇÕES
+    // FAXINA
     function abrirModalEscolhaFaxina() { document.getElementById('modalFaxina').style.display = 'flex'; }
 
     function gerarRelatorioFaxinaFinal() {
         const mesSel = parseInt(document.getElementById('sel_mes_faxina').value);
         const anoSel = parseInt(document.getElementById('sel_ano_faxina').value);
         
-        const style = document.createElement('style');
-        style.innerHTML = "@page { size: letter portrait; margin: 0.5in; }";
-        document.head.appendChild(style);
-
         const area = document.getElementById('area-impressao');
         area.innerHTML = "";
-
         const dataRef = new Date(anoSel, mesSel, 1);
         const mesNome = dataRef.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
         
-        // Coletar todas as faxinas (checkouts) do mês escolhido
         let listaFaxinas = [];
         reservasGlobais.forEach(r => {
             const dOut = new Date(r.data_checkout + "T12:00:00");
@@ -282,7 +295,6 @@
             }
         });
 
-        // Ordenar por data
         listaFaxinas.sort((a, b) => new Date(a.data) - new Date(b.data));
 
         const folha = document.createElement('div');
@@ -292,10 +304,10 @@
         html += `<table class="faxina-tabela">
                     <thead>
                         <tr>
-                            <th>Item</th>
-                            <th>Data:</th>
-                            <th>Apartamento:</th>
-                            <th>Valor:</th>
+                            <th class="col-item">Item</th>
+                            <th class="col-data">Data:</th>
+                            <th class="col-apto-header">Apartamento:</th>
+                            <th class="col-valor-header">Valor:</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -304,28 +316,27 @@
         listaFaxinas.forEach((f, idx) => {
             const dataFmt = f.data.split('-').reverse().join('/');
             html += `<tr>
-                        <td>${idx + 1}</td>
-                        <td>${dataFmt}</td>
-                        <td>${f.apto}</td>
-                        <td>$${f.valor.toFixed(2)}</td>
+                        <td class="col-item">${idx + 1}</td>
+                        <td class="col-data">${dataFmt}</td>
+                        <td class="col-apto-print">${f.apto}</td>
+                        <td class="col-valor-print">$${f.valor.toFixed(2)}</td>
                     </tr>`;
             totalGeral += f.valor;
         });
 
         html += `<tr>
-                    <td colspan="3" class="text-right"><strong>TOTAL GERAL A PAGAR NO MÊS: ➔</strong></td>
-                    <td class="bg-gray">$${totalGeral.toFixed(2)}</td>
+                    <td colspan="3" class="row-total-label">TOTAL GERAL A PAGAR NO MÊS: ➔</td>
+                    <td class="row-total-value">$${totalGeral.toFixed(2)}</td>
                 </tr>
                 </tbody></table>`;
 
         folha.innerHTML = html;
         area.appendChild(folha);
-
         fecharModais();
         window.print();
-        style.remove();
     }
 
+    // OUTRAS FUNÇÕES
     function fecharModais() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
     function mudarMes(v) { mesBase.setMonth(mesBase.getMonth() + v); renderizarMapaTriplo(); }
     function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
@@ -334,11 +345,7 @@
         div.style.display = (div.style.display === 'block') ? 'none' : 'block';
     }
 
-    // IMPRESSÃO MAPA
     function imprimirMapa4Meses() {
-        const style = document.createElement('style');
-        style.innerHTML = "@page { size: letter landscape; margin: 0.2in; }";
-        document.head.appendChild(style);
         const area = document.getElementById('area-impressao');
         area.innerHTML = "";
         let dataLoop = new Date(mesBase);
@@ -354,8 +361,60 @@
             area.appendChild(folha);
         }
         window.print();
-        style.remove();
     }
+
+    async function salvarFinal() {
+        const id = document.getElementById('edit_id').value;
+        const apto = document.getElementById('apto_id').value;
+        const guest = document.getElementById('guest_principal').value;
+        const cin = document.getElementById('data_checkin').value;
+        const cout = document.getElementById('data_checkout').value;
+        const ori = document.getElementById('origem').value;
+
+        if (!apto || !guest || !cin || !cout || !ori) { mostrarModal('modalErro', "Preencha os campos obrigatórios"); return; }
+
+        const r = {
+            apto_id: apto, guest_principal: guest, data_checkin: cin, data_checkout: cout, noites: document.getElementById('noites').value, 
+            origem: ori, invoice_id: document.getElementById('invoice_id').value, ayrton_reserva_id: document.getElementById('ayrton_reserva_id').value,
+            num_adultos: document.getElementById('num_adultos').value, num_criancas: document.getElementById('num_criancas').value,
+            guest_2: document.getElementById('guest_2').value, guest_3: document.getElementById('guest_3').value,
+            guest_4: document.getElementById('guest_4').value, guest_5: document.getElementById('guest_5').value,
+            guest_6: document.getElementById('guest_6').value, codigo_porta_1: document.getElementById('codigo_porta_1').value,
+            codigo_porta_2: document.getElementById('codigo_porta_2').value, 
+            valor_creditado: document.getElementById('valor_creditado').value || 0, data_credito: document.getElementById('data_credito').value,
+            valor_comissao: document.getElementById('valor_comissao').value || 0, data_comissao: document.getElementById('data_comissao').value,
+            usuario_alterou: document.getElementById('usuario_alterou').value, data_alteracao: document.getElementById('data_alteracao').value,
+            observacoes: document.getElementById('observacoes').value
+        };
+
+        const { error } = id ? await supabaseClient.from('reservas').update(r).eq('id', id) : await supabaseClient.from('reservas').insert([r]);
+        if (!error) location.reload();
+    }
+
+    function prepararEdicao(id) {
+        const r = reservasGlobais.find(res => res.id === id);
+        if (!r) return;
+        document.getElementById('edit_id').value = r.id;
+        document.getElementById('form-titulo').innerText = "Editar Reserva";
+        document.getElementById('apto_id').value = r.apto_id;
+        document.getElementById('guest_principal').value = r.guest_principal;
+        document.getElementById('data_checkin').value = fmt(r.data_checkin);
+        document.getElementById('data_checkout').value = fmt(r.data_checkout);
+        document.getElementById('noites').value = r.noites;
+        document.getElementById('origem').value = r.origem;
+        document.getElementById('num_adultos').value = r.num_adultos;
+        document.getElementById('observacoes').value = r.observacoes || "";
+        document.getElementById('btn-excluir').style.display = "block";
+        document.getElementById('btn-limpar').style.display = "block";
+    }
+
+    function resetarFormulario() { location.reload(); }
+    async function excluirDeVez() {
+        const id = document.getElementById('edit_id').value;
+        await supabaseClient.from('reservas').delete().eq('id', id);
+        location.reload();
+    }
+    function mostrarModal(id, msg) { if(msg) document.getElementById('msgErro').innerText = msg; document.getElementById(id).style.display = 'flex'; }
 
     init();
 </script>
