@@ -34,7 +34,7 @@
         .btn-print { background: #2d3748; color: white; border: none; }
         .btn-faxina { background: #805ad5; color: white; border: none; }
 
-        /* TABELAS DO MAPA NA TELA */
+        /* MAPA */
         .mes-container { margin-bottom: 15px; background: white; border-radius: 6px; padding: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
         .titulo-mes-tabela { font-weight: bold; color: #2d3748; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; padding-left: 5px; }
         
@@ -48,32 +48,18 @@
         .reserva-p { background-color: var(--cor-p); font-size: 11px; font-weight: bold; cursor: pointer; }
         .reserva-d { background-color: var(--cor-d); font-size: 11px; font-weight: bold; cursor: pointer; }
         .reserva-vinho { background-color: var(--cor-vinho); } 
-        
+
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
         .modal-box { background: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 350px; width: 90%; }
         .btn-modal { padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 5px; font-size: 13px; }
 
-        /* --- CONFIGURAÇÕES DE IMPRESSÃO --- */
-        #area-impressao { display: none; }
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             body * { visibility: hidden; }
             #area-impressao, #area-impressao * { visibility: visible; }
             #area-impressao { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; }
-            
             .print-mapa { page-break-after: always; width: 100%; display: block; }
-            .mes-print { margin-bottom: 4px !important; border: 1px solid #000 !important; padding: 0 !important; }
-            .mes-print .titulo-mes-tabela { font-size: 11px; margin: 2px 0; }
-            
-            .mes-print table th, .mes-print table td { 
-                height: 20px !important; 
-                line-height: 20px !important;
-                font-size: 9px !important;
-                padding: 0 !important;
-            }
-            .mes-print .cabecalho-dias { height: 16px !important; }
-            .mes-print .cabecalho-semana { height: 14px !important; }
-
+            .mes-print table td { height: 20px !important; line-height: 20px !important; font-size: 9px !important; }
             .sidebar, .topo-controles, .modal-overlay { display: none !important; }
         }
     </style>
@@ -84,7 +70,7 @@
     <h2 id="form-titulo">Nova Reserva</h2>
     <input type="hidden" id="edit_id">
     
-    <!-- NOVO CAMPO: CANCELAMENTO -->
+    <!-- CAMPO CANCELAMENTO -->
     <div class="campo" style="display: flex; align-items: center; gap: 8px; background: #fff5f5; padding: 5px; border-radius: 4px; border: 1px solid #feb2b2; margin-bottom: 12px;">
         <input type="checkbox" id="cancelada" style="width: 18px; height: 18px; cursor: pointer;">
         <label for="cancelada" style="margin: 0; color: #c53030; cursor: pointer; text-transform: none; font-size: 11px;">RESERVA CANCELADA</label>
@@ -106,8 +92,6 @@
         <div class="campo"><label>Data Crédito</label><input type="date" id="data_credito"></div>
         <div class="campo"><label>Valor Comissão (R$)</label><input type="number" step="0.01" id="valor_comissao"></div>
         <div class="campo"><label>Data Comissão</label><input type="date" id="data_comissao"></div>
-        <div class="campo"><label>Usuário que Alterou</label><input type="text" id="usuario_alterou" readonly style="background:#eee"></div>
-        <div class="campo"><label>Data Alteração</label><input type="text" id="data_alteracao" readonly style="background:#eee"></div>
     </div>
     <button id="btn-salvar" class="btn-salvar" onclick="salvarFinal()">Salvar Reserva</button>
     <button id="btn-limpar" class="btn-limpar" onclick="resetarFormulario()">Novo (Limpar)</button>
@@ -131,7 +115,6 @@
 
 <div id="area-impressao"></div>
 
-<!-- Modal Faxina -->
 <div id="modalFaxina" class="modal-overlay">
     <div class="modal-box">
         <h3>Relatório de Faxina</h3>
@@ -141,10 +124,6 @@
         <button class="btn-modal" onclick="fecharModais()">Sair</button>
     </div>
 </div>
-
-<div id="modalErro" class="modal-overlay"><div class="modal-box"><h3 style="color:#e53e3e">Aviso</h3><p id="msgErro"></p><button class="btn-modal" onclick="fecharModais()">OK</button></div></div>
-<div id="modalSucesso" class="modal-overlay"><div class="modal-box"><h3>✔ Sucesso!</h3><p id="msgSucessoTxt"></p><button class="btn-modal" onclick="location.reload()">OK</button></div></div>
-<div id="modalConfirmarExcluir" class="modal-overlay"><div class="modal-box"><h3>Excluir Permanentemente?</h3><p>Deseja apagar este registro do histórico?</p><button class="btn-modal" style="background:#e53e3e; color:white" onclick="excluirDeVez()">Confirmar</button><button class="btn-modal" onclick="fecharModais()">Cancelar</button></div></div>
 
 <script>
     const SB_URL = "https://eqoayyftpddombylgxpw.supabase.co";
@@ -164,17 +143,17 @@
         const select = document.getElementById('apto_id');
         select.innerHTML = '<option value="">Selecione...</option>';
         aptosGlobais.forEach(a => select.innerHTML += `<option value="${a.id}">${a.nome_apto}</option>`);
-        document.getElementById('sel_ano_faxina').value = new Date().getFullYear();
-        document.getElementById('sel_mes_faxina').value = new Date().getMonth();
         renderizarMapaTriplo();
     }
 
     async function renderizarMapaTriplo() {
-        const { data: reservas } = await supabaseClient.from('reservas').select('*');
+        const { data: reservas, error } = await supabaseClient.from('reservas').select('*');
+        if(error) console.error("Erro ao buscar reservas:", error);
+        
         reservasGlobais = reservas || [];
         
-        // FILTRO: Só envia para as tabelas do mapa as reservas que NÃO estão canceladas
-        const reservasAtivas = reservasGlobais.filter(r => r.cancelada === false || r.cancelada === null);
+        // FILTRO ROBUSTO: Remove as canceladas do mapa
+        const reservasAtivas = reservasGlobais.filter(r => r.cancelada !== true);
 
         const area = document.getElementById('area-mapas');
         area.innerHTML = "";
@@ -237,29 +216,27 @@
 
     async function salvarFinal() {
         const id = document.getElementById('edit_id').value;
-        const apto = document.getElementById('apto_id').value;
-        const guest = document.getElementById('guest_principal').value;
-        const cin = document.getElementById('data_checkin').value;
-        const cout = document.getElementById('data_checkout').value;
         const r = { 
-            apto_id: apto, 
-            guest_principal: guest, 
-            data_checkin: cin, 
-            data_checkout: cout, 
+            apto_id: document.getElementById('apto_id').value, 
+            guest_principal: document.getElementById('guest_principal').value, 
+            data_checkin: document.getElementById('data_checkin').value, 
+            data_checkout: document.getElementById('data_checkout').value, 
             noites: document.getElementById('noites').value, 
             origem: document.getElementById('origem').value, 
             invoice_id: document.getElementById('invoice_id').value, 
-            valor_creditado: document.getElementById('valor_creditado').value || 0, 
-            data_credito: document.getElementById('data_credito').value, 
-            valor_comissao: document.getElementById('valor_comissao').value || 0, 
-            data_comissao: document.getElementById('data_comissao').value, 
-            usuario_alterou: document.getElementById('usuario_alterou').value, 
-            data_alteracao: document.getElementById('data_alteracao').value, 
             observacoes: document.getElementById('observacoes').value,
-            cancelada: document.getElementById('cancelada').checked // SALVA ESTADO DO CANCELAMENTO
+            cancelada: document.getElementById('cancelada').checked, // CAPTURA O CHECKBOX
+            valor_creditado: document.getElementById('valor_creditado').value || 0,
+            data_credito: document.getElementById('data_credito').value
         };
+
         const { error } = id ? await supabaseClient.from('reservas').update(r).eq('id', id) : await supabaseClient.from('reservas').insert([r]);
-        if (!error) location.reload();
+        
+        if (error) {
+            alert("ERRO AO SALVAR: Verifique se a coluna 'cancelada' existe no Supabase.\n\nDetalhe: " + error.message);
+        } else {
+            location.reload();
+        }
     }
 
     function prepararEdicao(id) {
@@ -267,20 +244,18 @@
         if (!r) return;
         document.getElementById('edit_id').value = r.id;
         document.getElementById('form-titulo').innerText = "Editar Reserva";
+        document.getElementById('cancelada').checked = r.cancelada || false; // CARREGA O ESTADO
         document.getElementById('apto_id').value = r.apto_id;
         document.getElementById('guest_principal').value = r.guest_principal;
         document.getElementById('data_checkin').value = fmt(r.data_checkin);
         document.getElementById('data_checkout').value = fmt(r.data_checkout);
         document.getElementById('noites').value = r.noites;
         document.getElementById('origem').value = r.origem;
-        document.getElementById('invoice_id').value = r.invoice_id;
+        document.getElementById('invoice_id').value = r.invoice_id || "";
         document.getElementById('observacoes').value = r.observacoes || "";
-        document.getElementById('cancelada').checked = r.cancelada || false; // CARREGA ESTADO DO CANCELAMENTO
-        
-        // Campos extras
-        document.getElementById('valor_creditado').value = r.valor_creditado;
+        document.getElementById('valor_creditado').value = r.valor_creditado || 0;
         document.getElementById('data_credito').value = fmt(r.data_credito);
-        
+
         document.getElementById('btn-excluir').style.display = "block";
         document.getElementById('btn-limpar').style.display = "block";
         window.scrollTo({top: 0, behavior: 'smooth'});
@@ -292,41 +267,8 @@
     function toggleExtras() { const div = document.getElementById('secao-extras'); div.style.display = (div.style.display === 'block') ? 'none' : 'block'; }
     function resetarFormulario() { location.reload(); }
     async function excluirDeVez() { const id = document.getElementById('edit_id').value; await supabaseClient.from('reservas').delete().eq('id', id); location.reload(); }
-    function confirmarExclusao() { document.getElementById('modalConfirmarExcluir').style.display = 'flex'; }
     function abrirModalEscolhaFaxina() { document.getElementById('modalFaxina').style.display = 'flex'; }
-
-    // Impressão 4 meses
-    function imprimirMapa4Meses() {
-        const area = document.getElementById('area-impressao');
-        area.innerHTML = "";
-        let dataInicio = new Date(mesBase.getFullYear(), mesBase.getMonth(), 1);
-        let dataFimReserva = new Date();
-        reservasGlobais.forEach(r => {
-            let dOut = new Date(r.data_checkout + "T12:00:00");
-            if (dOut > dataFimReserva) dataFimReserva = dOut;
-        });
-        let totalMeses = (dataFimReserva.getFullYear() - dataInicio.getFullYear()) * 12 + (dataFimReserva.getMonth() - dataInicio.getMonth()) + 1;
-        if (totalMeses < 4) totalMeses = 4;
-        
-        // Filtra para impressão também
-        const reservasAtivas = reservasGlobais.filter(r => !r.cancelada);
-
-        for (let i = 0; i < totalMeses; i += 4) {
-            const folha = document.createElement('div');
-            folha.className = 'print-mapa';
-            for (let j = 0; j < 4; j++) {
-                if (i + j < totalMeses) {
-                    const df = new Date(dataInicio.getFullYear(), dataInicio.getMonth() + i + j, 1);
-                    const mesBloco = criarTabelaMes(df, reservasAtivas);
-                    mesBloco.classList.add('mes-print');
-                    folha.appendChild(mesBloco);
-                }
-            }
-            area.appendChild(folha);
-        }
-        window.print();
-    }
-
+    
     function verificarReserva() {
         const cin = document.getElementById('data_checkin').value;
         const cout = document.getElementById('data_checkout').value;
