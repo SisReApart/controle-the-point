@@ -49,7 +49,7 @@
         .cabecalho-dias { background: #2d3748; color: white; height: 18px; }
         .reserva-p { background-color: var(--cor-p); font-weight: bold; cursor: pointer; }
         .reserva-d { background-color: var(--cor-d); font-weight: bold; cursor: pointer; }
-        .reserva-vinho { background-color: var(--cor-vinho); } 
+        .reserva-vinho { background-color: var(--cor-vinho); border: none; color: transparent; cursor: pointer; } 
         
         .highlight-search { border: 3px solid red !important; animation: pulse 1.5s infinite; position: relative; z-index: 10; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
@@ -65,7 +65,7 @@
         .tab-hist tr:hover { background: #f0f7ff; cursor: pointer; }
         .res-cancelada { color: red; text-decoration: line-through; opacity: 0.6; }
 
-        /* IMPRESSÃO 4 MESES */
+        /* IMPRESSÃO */
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             body * { visibility: hidden; }
@@ -149,6 +149,7 @@
 <!-- MODAIS -->
 <div id="modalHistorico" class="modal-overlay"><div class="modal-box"><h3>Histórico Geral</h3><table class="tab-hist"><thead><tr><th>Apto</th><th>Hóspede</th><th>Check-in</th><th>Check-out</th><th>Dias</th><th>Origem</th><th>#Ayrton</th><th>Valor</th><th>Status</th></tr></thead><tbody id="corpo-historico"></tbody></table><br><button class="btn-modal" onclick="fecharModais()">Fechar</button></div></div>
 <div id="modalErro" class="modal-overlay"><div class="modal-box" style="max-width:300px;"><h3 style="color:#e53e3e">Aviso</h3><p id="msgErro"></p><button class="btn-modal" style="background:#e53e3e;color:white" onclick="fecharModais()">OK</button></div></div>
+<div id="modalAlerta" class="modal-overlay"><div class="modal-box" style="max-width:300px;"><h3 style="color:#d69e2e">Atenção</h3><p id="msgAlerta"></p><button class="btn-modal" style="background:#38a169;color:white" onclick="confirmarAlerta()">Continuar</button><button class="btn-modal" style="background:#718096;color:white" onclick="limparDatas()">Corrigir</button></div></div>
 <div id="modalFaxina" class="modal-overlay"><div class="modal-box" style="max-width:400px;"><h3>Relatório de Faxina</h3><div class="campo"><label>Mês:</label><select id="sel_mes_faxina"><option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option><option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option><option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option><option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option></select></div><div class="campo"><label>Ano:</label><input type="number" id="sel_ano_faxina" value="2026"></div><button class="btn-modal" style="background:#38a169;color:white" onclick="gerarRelatorioFaxinaFinal()">Gerar</button><button class="btn-modal" onclick="fecharModais()">Sair</button></div></div>
 
 <script>
@@ -160,11 +161,17 @@
     let mesBase = new Date(); mesBase.setDate(1);
     let aptosGlobais = [];
     let reservasGlobais = [];
+    let minNoites = 4;
+    let alertaAceito = false;
     const diasSemanaNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
     function fmt(d) { if(!d) return ""; return d.toString().split('T')[0].split(' ')[0].trim(); }
     function fecharModais() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
-    function mostrarModal(id, msg) { if(msg) document.getElementById('msgErro').innerText = msg; document.getElementById(id).style.display = 'flex'; }
+    function mostrarModal(id, msg) { 
+        if(id === 'modalErro') document.getElementById('msgErro').innerText = msg;
+        if(id === 'modalAlerta') document.getElementById('msgAlerta').innerText = msg;
+        document.getElementById(id).style.display = 'flex'; 
+    }
 
     window.onload = () => {
         if (!userLogado) document.getElementById('tela-login').style.display = 'flex';
@@ -187,6 +194,10 @@
         const select = document.getElementById('apto_id');
         select.innerHTML = '<option value="">Selecione...</option>';
         aptosGlobais.forEach(a => select.innerHTML += `<option value="${a.id}">${a.nome_apto}</option>`);
+        
+        const { data: config } = await supabaseClient.from('configuracoes').select('valor').eq('chave', 'minimo_noites_alerta').single();
+        if (config) minNoites = config.valor;
+        
         renderizarMapaTriplo();
     }
 
@@ -212,26 +223,36 @@
         let html = `<table><thead><tr class="cabecalho-dias"><th class="col-apto">Apto</th>`;
         for (let d = 1; d <= ultimoDia; d++) html += `<th>${d}</th>`;
         html += `</tr></thead><tbody>`;
+        
         aptosGlobais.forEach(apto => {
             html += `<tr><td class="col-apto">${apto.nome_apto}</td>`;
             for (let d = 1; d <= ultimoDia; d++) {
                 const dIso = new Date(ano, mes, d).toISOString().split('T')[0];
                 const saindoH = reservas.find(r => r.apto_id === apto.id && fmt(r.data_checkout) === dIso);
                 const entrandoH = reservas.find(r => r.apto_id === apto.id && fmt(r.data_checkin) === dIso);
-                if (saindoH && entrandoH) html += `<td class="reserva-vinho" onclick="prepararEdicao('${entrandoH.id}')"></td>`;
-                else {
+                
+                if (saindoH && entrandoH) {
+                    html += `<td class="reserva-vinho" onclick="prepararEdicao('${entrandoH.id}')"></td>`;
+                } else {
                     const resA = reservas.find(r => r.apto_id === apto.id && dIso >= fmt(r.data_checkin) && dIso <= fmt(r.data_checkout));
                     if (resA && (dIso === fmt(resA.data_checkin) || d === 1 || (saindoH === undefined && dIso > fmt(resA.data_checkin)))) {
-                        let dur = 0; let tempD = d;
-                        while(tempD <= ultimoDia) {
-                            const dL = new Date(ano, mes, tempD).toISOString().split('T')[0];
-                            if (dL > fmt(resA.data_checkout)) break;
-                            if (reservas.some(r => r.apto_id === apto.id && fmt(r.data_checkout) === dL && reservas.some(r2 => r2.apto_id === apto.id && fmt(r2.data_checkin) === dL)) && tempD > d) break;
-                            dur++; tempD++;
-                        }
-                        const cod = {'Booking':'B','AirBnb':'A','VRBO':'V','D':'D','P':'P'}[resA.origem] || "R";
-                        html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'} cell-reserva" data-guest="${resA.guest_principal.toLowerCase()}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal} - 3Adt</td>`;
-                        d += (dur - 1);
+                        let ok = false;
+                        if (dIso === fmt(resA.data_checkin)) ok = true;
+                        else if (d === 1) ok = true;
+                        else if (saindoH === undefined && dIso > fmt(resA.data_checkin)) ok = true;
+
+                        if (ok) {
+                            let dur = 0; let tempD = d;
+                            while(tempD <= ultimoDia) {
+                                const dL = new Date(ano, mes, tempD).toISOString().split('T')[0];
+                                if (dL > fmt(resA.data_checkout)) break;
+                                if (reservas.some(r => r.apto_id === apto.id && fmt(r.data_checkout) === dL && reservas.some(r2 => r2.apto_id === apto.id && fmt(r2.data_checkin) === dL)) && tempD > d) break;
+                                dur++; tempD++;
+                            }
+                            const cod = {'Booking':'B','AirBnb':'A','VRBO':'V','D':'D','P':'P'}[resA.origem] || "R";
+                            html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'} cell-reserva" data-guest="${resA.guest_principal.toLowerCase()}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal} - 3Adt</td>`;
+                            d += (dur - 1);
+                        } else html += `<td></td>`;
                     } else html += `<td></td>`;
                 }
             }
@@ -240,28 +261,48 @@
         html += `</tbody></table>`; container.innerHTML += html; return container;
     }
 
-    // BUSCA E HISTÓRICO
-    function localizarNoMapa() {
-        const busca = document.getElementById('busca-hospede').value.toLowerCase().trim();
-        document.querySelectorAll('.cell-reserva').forEach(el => {
-            el.classList.remove('highlight-search');
-            if (busca !== "" && el.getAttribute('data-guest').includes(busca)) el.classList.add('highlight-search');
-        });
+    // VALIDAÇÃO DE CONFLITOS E NOITES
+    async function verificarReserva() {
+        const apto = document.getElementById('apto_id').value;
+        const cin = document.getElementById('data_checkin').value;
+        const cout = document.getElementById('data_checkout').value;
+        const editId = document.getElementById('edit_id').value;
+
+        if (!apto || !cin) return;
+
+        let lista = reservasGlobais.filter(r => r.apto_id === apto && r.id !== editId && r.cancelada !== true);
+        
+        // Verifica sobreposição no Check-in
+        const conflitoIn = lista.find(r => cin >= fmt(r.data_checkin) && cin < fmt(r.data_checkout));
+        if (conflitoIn) {
+            mostrarModal('modalErro', `Conflito: O apto já está ocupado por ${conflitoIn.guest_principal}.`);
+            document.getElementById('data_checkin').value = "";
+            return;
+        }
+
+        if (!cout) return;
+
+        // Verifica sobreposição total ou no Check-out
+        const conflitoGeral = lista.find(r => cin < fmt(r.data_checkout) && cout > fmt(r.data_checkin));
+        if (conflitoGeral) {
+            mostrarModal('modalErro', `Conflito com a reserva de ${conflitoGeral.guest_principal}.`);
+            document.getElementById('data_checkout').value = "";
+            return;
+        }
+
+        const d1 = new Date(cin + "T12:00:00"); const d2 = new Date(cout + "T12:00:00");
+        const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+        document.getElementById('noites').value = diff > 0 ? diff : "Erro";
+
+        if (diff < minNoites && !alertaAceito && diff > 0) {
+            mostrarModal('modalAlerta', `Estadia curta (${diff} noites). O padrão é ${minNoites}.`);
+        }
     }
 
-    async function abrirHistorico() {
-        const { data } = await supabaseClient.from('reservas').select('*');
-        const sorted = data.sort((a,b) => new Date(a.data_checkin) - new Date(b.data_checkin) || a.guest_principal.localeCompare(b.guest_principal));
-        const corpo = document.getElementById('corpo-historico'); corpo.innerHTML = "";
-        sorted.forEach(r => {
-            const aptoNome = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "N/A";
-            const status = r.cancelada ? '<b style="color:red">Cancelada</b>' : '<b style="color:green">Ativa</b>';
-            corpo.innerHTML += `<tr onclick="prepararEdicao('${r.id}'); fecharModais();" class="${r.cancelada ? 'res-cancelada' : ''}"><td>${aptoNome}</td><td>${r.guest_principal}</td><td>${new Date(r.data_checkin + "T12:00:00").toLocaleDateString('pt-BR')}</td><td>${new Date(r.data_checkout + "T12:00:00").toLocaleDateString('pt-BR')}</td><td>${r.noites}</td><td>${r.origem}</td><td>${r.ayrton_reserva_id || ""}</td><td>$${r.valor_creditado || 0}</td><td>${status}</td></tr>`;
-        });
-        document.getElementById('modalHistorico').style.display = 'flex';
-    }
+    function confirmarAlerta() { alertaAceito = true; fecharModais(); }
+    function limparDatas() { document.getElementById('data_checkin').value = ""; document.getElementById('data_checkout').value = ""; fecharModais(); }
 
-    // SALVAMENTO SEGURO
+    // CRUD
     function tratarData(val) { return (val === "" || val === null) ? null : val; }
 
     async function salvarFinal() {
@@ -285,16 +326,9 @@
             observacoes: document.getElementById('observacoes').value
         };
 
-        // CORREÇÃO UUID: Se idVal for vazio, usamos INSERT, se tiver valor, usamos UPDATE
-        let result;
-        if (idVal && idVal.trim() !== "") {
-            result = await supabaseClient.from('reservas').update(r).eq('id', idVal);
-        } else {
-            result = await supabaseClient.from('reservas').insert([r]);
-        }
-
-        if (result.error) mostrarModal('modalErro', result.error.message);
-        else location.reload();
+        if (idVal) await supabaseClient.from('reservas').update(r).eq('id', idVal);
+        else await supabaseClient.from('reservas').insert([r]);
+        location.reload();
     }
 
     function prepararEdicao(id) {
@@ -320,6 +354,27 @@
         });
     }
 
+    // AUXILIARES
+    function localizarNoMapa() {
+        const busca = document.getElementById('busca-hospede').value.toLowerCase().trim();
+        document.querySelectorAll('.cell-reserva').forEach(el => {
+            el.classList.remove('highlight-search');
+            if (busca !== "" && el.getAttribute('data-guest').includes(busca)) el.classList.add('highlight-search');
+        });
+    }
+
+    async function abrirHistorico() {
+        const { data } = await supabaseClient.from('reservas').select('*');
+        const sorted = data.sort((a,b) => new Date(a.data_checkin) - new Date(b.data_checkin) || a.guest_principal.localeCompare(b.guest_principal));
+        const corpo = document.getElementById('corpo-historico'); corpo.innerHTML = "";
+        sorted.forEach(r => {
+            const aptoNome = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "N/A";
+            const status = r.cancelada ? '<b style="color:red">Cancelada</b>' : '<b style="color:green">Ativa</b>';
+            corpo.innerHTML += `<tr onclick="prepararEdicao('${r.id}'); fecharModais();" class="${r.cancelada ? 'res-cancelada' : ''}"><td>${aptoNome}</td><td>${r.guest_principal}</td><td>${new Date(r.data_checkin + "T12:00:00").toLocaleDateString('pt-BR')}</td><td>${new Date(r.data_checkout + "T12:00:00").toLocaleDateString('pt-BR')}</td><td>${r.noites}</td><td>${r.origem}</td><td>${r.ayrton_reserva_id || ""}</td><td>$${r.valor_creditado || 0}</td><td>${status}</td></tr>`;
+        });
+        document.getElementById('modalHistorico').style.display = 'flex';
+    }
+
     function resetarFormulario() { location.reload(); }
     function mudarMes(v) { mesBase.setMonth(mesBase.getMonth() + v); renderizarMapaTriplo(); }
     function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
@@ -327,16 +382,6 @@
     function confirmarExclusao() { if(confirm("Excluir definitivamente?")) excluirDeVez(); }
     async function excluirDeVez() { await supabaseClient.from('reservas').delete().eq('id', document.getElementById('edit_id').value); location.reload(); }
     function abrirModalEscolhaFaxina() { document.getElementById('modalFaxina').style.display = 'flex'; }
-    
-    function verificarReserva() {
-        const cin = document.getElementById('data_checkin').value;
-        const cout = document.getElementById('data_checkout').value;
-        if (cin && cout) {
-            const d1 = new Date(cin + "T12:00:00"); const d2 = new Date(cout + "T12:00:00");
-            const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
-            document.getElementById('noites').value = diff > 0 ? diff : 0;
-        }
-    }
 
     function imprimirMapa4Meses() {
         const area = document.getElementById('area-impressao'); area.innerHTML = "";
