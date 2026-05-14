@@ -10,9 +10,8 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; overflow: hidden; }
         
         /* TELA DE LOGIN */
-        #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background:#2d3748; z-index:9999; display:flex; justify-content:center; align-items:center; }
+        #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background:#2d3748; z-index:9999; display:none; justify-content:center; align-items:center; }
         .login-box { background:white; padding:30px; border-radius:8px; width:300px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); }
-        .login-box h2 { margin-top:0; color:#2d3748; }
         .login-box input { width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:4px; box-sizing:border-box; }
         .btn-login { width:100%; padding:10px; background:#38a169; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; }
 
@@ -32,40 +31,53 @@
 
         /* CONTEÚDO PRINCIPAL */
         .main-content { flex: 1; padding: 5px 10px; overflow-y: auto; display: flex; flex-direction: column; background: #edf2f7; }
-        .topo-controles { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: sticky; top: 0; z-index: 100; background: #edf2f7; padding: 10px 5px; }
-        .controles-esquerda { display: flex; gap: 10px; }
-        .controles-direita { display: flex; gap: 8px; }
+        .topo-controles { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: sticky; top: 0; z-index: 100; background: #edf2f7; padding: 10px 5px; gap: 10px; }
+        .controles-esquerda { display: flex; gap: 8px; flex-wrap: wrap; }
+        .controles-direita { display: flex; gap: 8px; align-items: center; }
 
         .btn-nav { padding: 8px 12px; cursor: pointer; background: white; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold; font-size: 11px; }
-        .btn-hoje { background: #3182ce; color: white; border: none; }
-        .btn-print { background: #2d3748; color: white; border: none; }
         .btn-faxina { background: #805ad5; color: white; border: none; }
+        .btn-lista { background: #2d3748; color: white; border: none; }
+
+        /* BUSCA */
+        .input-busca { padding: 8px; border: 2px solid #3182ce; border-radius: 4px; width: 200px; font-size: 12px; }
 
         /* MAPA */
-        .mes-container { margin-bottom: 15px; background: white; border-radius: 6px; padding: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
-        .titulo-mes-tabela { font-weight: bold; color: #2d3748; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; padding-left: 5px; }
-        
+        .mes-container { margin-bottom: 15px; background: white; border-radius: 6px; padding: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); }
+        .titulo-mes-tabela { font-weight: bold; color: #2d3748; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; }
         table { border-collapse: collapse; width: 100%; table-layout: fixed; }
-        th, td { border: 1px solid var(--cor-borda); height: 26px; text-align: center; font-size: 9px; overflow: hidden; white-space: nowrap; text-overflow: clip; padding: 0; }
-        .col-apto { width: 130px; text-align: left; padding-left: 8px; background: #f8f9fa; font-weight: bold; font-size: 9px; }
+        th, td { border: 1px solid var(--cor-borda); height: 26px; text-align: center; font-size: 9px; overflow: hidden; white-space: nowrap; text-overflow: clip; }
+        .col-apto { width: 130px; text-align: left; padding-left: 8px; background: #f8f9fa; font-weight: bold; }
         .cabecalho-dias { background: #2d3748; color: white; height: 18px; }
-        
-        .reserva-p { background-color: var(--cor-p); font-size: 11px; font-weight: bold; cursor: pointer; }
-        .reserva-d { background-color: var(--cor-d); font-size: 11px; font-weight: bold; cursor: pointer; }
+        .reserva-p { background-color: var(--cor-p); font-weight: bold; cursor: pointer; }
+        .reserva-d { background-color: var(--cor-d); font-weight: bold; cursor: pointer; }
         .reserva-vinho { background-color: var(--cor-vinho); } 
         
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 99999; justify-content: center; align-items: center; }
-        .modal-box { background: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 450px; width: 90%; max-height: 80vh; overflow-y: auto; }
-        .btn-modal { padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 5px; font-size: 13px; }
+        /* DESTAQUE BUSCA */
+        .highlight-search { border: 3px solid red !important; animation: pulse 1.5s infinite; position: relative; z-index: 10; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        /* CONFIGURAÇÃO DE IMPRESSÃO */
-        #area-impressao { display: none; }
+        /* MODAIS */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 99999; justify-content: center; align-items: center; }
+        .modal-box { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 1100px; max-height: 90vh; overflow-y: auto; }
+        .btn-modal { padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 5px; }
+
+        /* TABELA HISTÓRICO */
+        .tab-hist { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .tab-hist th { background: #2d3748; color: white; padding: 8px; position: sticky; top: 0; }
+        .tab-hist td { border: 1px solid #ddd; padding: 5px; text-align: center; }
+        .tab-hist tr:hover { background: #f0f7ff; cursor: pointer; }
+        .res-cancelada { color: red; text-decoration: line-through; opacity: 0.6; }
+
+        /* AJUSTES DE IMPRESSÃO - 4 MESES POR PÁGINA */
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             body * { visibility: hidden; }
             #area-impressao, #area-impressao * { visibility: visible; }
-            #area-impressao { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; }
+            #area-impressao { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
             .print-mapa { page-break-after: always; width: 100%; display: block; }
+            .mes-print { border: 1px solid #000; margin-bottom: 2px !important; }
+            .mes-print table td, .mes-print table th { height: 18px !important; line-height: 18px !important; font-size: 8px !important; }
             .sidebar, .topo-controles, .modal-overlay, #tela-login { display: none !important; }
         }
     </style>
@@ -76,13 +88,13 @@
     <div class="login-box">
         <h2>Acesso Painel</h2>
         <input type="text" id="login_user" placeholder="Usuário">
-        <input type="password" id="login_pass" placeholder="Senha" onkeydown="if(event.key === 'Enter') realizarLogin()">
+        <input type="password" id="login_pass" placeholder="Senha" onkeydown="if(event.key==='Enter') realizarLogin()">
         <button class="btn-login" onclick="realizarLogin()">Entrar</button>
     </div>
 </div>
 
 <div class="sidebar">
-    <div id="user-info" style="font-size: 10px; color: #718096; margin-bottom: 10px; text-align: right;">Logado como: <b id="nome-logado">...</b></div>
+    <div id="user-info" style="font-size: 10px; color: #718096; margin-bottom: 10px; text-align: right;">Usuário: <b id="nome-logado">...</b></div>
     <h2 id="form-titulo">Nova Reserva</h2>
     <input type="hidden" id="edit_id">
     
@@ -100,6 +112,10 @@
     <div class="campo"><label>Noites</label><input type="text" id="noites" readonly style="background: #f0f0f0;"></div>
     <div class="campo"><label>Origem *</label><select id="origem"><option value="Booking">Booking</option><option value="AirBnb">AirBnb</option><option value="VRBO">VRBO</option><option value="D">Direto (D)</option><option value="P">Pendente (P)</option></select></div>
     <div class="campo"><label>Invoice / ID</label><input type="text" id="invoice_id"></div>
+    
+    <!-- CAMPO AYRTON SOLICITADO -->
+    <div class="campo"><label>#Ayrton</label><input type="text" id="ayrton_reserva_id"></div>
+    
     <div class="campo"><label>OBS:</label><textarea id="observacoes" rows="2"></textarea></div>
     
     <button type="button" class="btn-extras" style="background:#3182ce; color:white;" onclick="toggleExtras()">Exibir Campos Extras</button>
@@ -111,24 +127,25 @@
     </div>
     
     <button id="btn-salvar" class="btn-salvar" onclick="salvarFinal()">Salvar Reserva</button>
-    <button class="btn-limpar" style="display:block" onclick="location.reload()">Novo (Limpar)</button>
+    <button class="btn-limpar" style="display:block" onclick="resetarFormulario()">Novo (Limpar)</button>
     <button id="btn-excluir" class="btn-excluir" onclick="confirmarExclusao()">Excluir Permanente</button>
-    
     <hr>
-    <button id="btn-master" class="btn-salvar" style="background:#4a5568; font-size:11px; display:none;" onclick="abrirGestaoUsuarios()">⚙️ GESTÃO DE USUÁRIOS</button>
-    <button class="btn-limpar" style="display:block; background:#e53e3e; margin-top:20px;" onclick="logout()">Sair do Sistema</button>
+    <button class="btn-salvar" style="background:#4a5568; font-size:10px;" onclick="abrirGestaoUsuarios()" id="btn-master" style="display:none;">Gestão de Usuários</button>
+    <button class="btn-limpar" style="display:block; background:#e53e3e;" onclick="logout()">Sair</button>
 </div>
 
 <div class="main-content">
     <div class="topo-controles">
         <div class="controles-esquerda">
-            <button class="btn-nav btn-print" onclick="imprimirMapa4Meses()">🖨️ Imprimir Mapa de Reservas</button>
-            <button class="btn-nav btn-faxina" onclick="abrirModalEscolhaFaxina()">🧹 Imprimir Faxina</button>
+            <button class="btn-nav btn-print" onclick="imprimirMapa4Meses()">🖨️ Mapa (Print)</button>
+            <button class="btn-nav btn-faxina" onclick="abrirModalEscolhaFaxina()">🧹 Faxina</button>
+            <button class="btn-nav btn-lista" onclick="abrirHistorico()">📋 Ver Lista/Histórico</button>
         </div>
         <div class="controles-direita">
-            <button class="btn-nav" onclick="mudarMes(-1)">◀ ANTERIOR</button>
-            <button class="btn-nav btn-hoje" onclick="irParaHoje()">HOJE</button>
-            <button class="btn-nav" onclick="mudarMes(1)">PRÓXIMO ▶</button>
+            <input type="text" class="input-busca" id="busca-hospede" placeholder="🔍 Localizar hóspede no mapa..." oninput="localizarNoMapa()">
+            <button class="btn-nav" onclick="mudarMes(-1)">◀</button>
+            <button class="btn-nav" onclick="irParaHoje()">HOJE</button>
+            <button class="btn-nav" onclick="mudarMes(1)">▶</button>
         </div>
     </div>
     <div id="area-mapas"></div>
@@ -136,30 +153,29 @@
 
 <div id="area-impressao"></div>
 
-<!-- MODAL GESTÃO DE USUÁRIOS -->
-<div id="modalUsuarios" class="modal-overlay">
-    <div class="modal-box">
-        <h3>Gestão de Usuários</h3>
-        <table border="1" style="width:100%; border-collapse:collapse; margin-bottom:15px; font-size:12px;">
-            <thead><tr style="background:#eee"><th>Usuário</th><th>Nível</th><th>Ação</th></tr></thead>
-            <tbody id="lista-usuarios-corpo"></tbody>
+<!-- MODAL HISTÓRICO / LISTA -->
+<div id="modalHistorico" class="modal-overlay">
+    <div class="modal-box" style="max-width: 95%;">
+        <h3>Lista Geral de Reservas (Ativas e Canceladas)</h3>
+        <p style="font-size:11px; color:#666;">Clique em uma linha para editar ou reativar.</p>
+        <table class="tab-hist">
+            <thead>
+                <tr>
+                    <th>Apto</th><th>Hóspede</th><th>Check-in</th><th>Check-out</th><th>Dias</th><th>Origem</th><th>#Ayrton</th><th>Valor</th><th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="corpo-historico"></tbody>
         </table>
-        <hr>
-        <h4>Novo Usuário</h4>
-        <div class="campo"><input type="text" id="new_user_name" placeholder="Nome"></div>
-        <div class="campo"><input type="password" id="new_user_pass" placeholder="Senha"></div>
-        <div class="campo">
-            <select id="new_user_level"><option value="Usuário">Nível Usuário</option><option value="Master">Nível Master</option></select>
-        </div>
-        <button class="btn-login" onclick="adicionarUsuario()">Cadastrar Usuário</button>
-        <button class="btn-modal" onclick="fecharModais()">Fechar</button>
+        <br>
+        <button class="btn-modal" style="background:#718096; color:white;" onclick="fecharModais()">Fechar</button>
     </div>
 </div>
 
-<div id="modalErro" class="modal-overlay"><div class="modal-box"><h3 style="color:#e53e3e">Aviso</h3><p id="msgErro"></p><button class="btn-modal" style="background:#e53e3e;color:white" onclick="fecharModais()">OK</button></div></div>
+<div id="modalErro" class="modal-overlay"><div class="modal-box" style="max-width:300px;"><h3 style="color:#e53e3e">Aviso</h3><p id="msgErro"></p><button class="btn-modal" style="background:#e53e3e;color:white" onclick="fecharModais()">OK</button></div></div>
+
 <div id="modalFaxina" class="modal-overlay">
-    <div class="modal-box">
-        <h3>Escolher Mês da Faxina</h3>
+    <div class="modal-box" style="max-width:400px;">
+        <h3>Relatório de Faxina</h3>
         <div class="campo"><label>Mês:</label><select id="sel_mes_faxina"><option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option><option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option><option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option><option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option></select></div>
         <div class="campo"><label>Ano:</label><input type="number" id="sel_ano_faxina" value="2026"></div>
         <button class="btn-modal" style="background:#38a169;color:white" onclick="gerarRelatorioFaxinaFinal()">Gerar</button>
@@ -172,7 +188,7 @@
     const SB_KEY = "sb_publishable_52ePL6AdYLm58359gM4VJg_x5bfdamZ";
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    let userLogado = null;
+    let userLogado = JSON.parse(sessionStorage.getItem('point_user'));
     let mesBase = new Date(); mesBase.setDate(1);
     let aptosGlobais = [];
     let reservasGlobais = [];
@@ -182,52 +198,31 @@
     function fecharModais() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
     function mostrarModal(id, msg) { if(msg) document.getElementById('msgErro').innerText = msg; document.getElementById(id).style.display = 'flex'; }
 
-    // LOGIN
+    window.onload = () => {
+        if (!userLogado) {
+            document.getElementById('tela-login').style.display = 'flex';
+        } else {
+            document.getElementById('nome-logado').innerText = userLogado.usuario;
+            if(userLogado.nivel === 'Master') document.getElementById('btn-master').style.display = 'block';
+            init();
+        }
+    };
+
     async function realizarLogin() {
         const u = document.getElementById('login_user').value.trim();
         const s = document.getElementById('login_pass').value.trim();
         const { data, error } = await supabaseClient.from('usuarios').select('*').eq('usuario', u).eq('senha', s).single();
-        
         if (data) {
             userLogado = data;
-            document.getElementById('tela-login').style.display = 'none';
-            document.getElementById('nome-logado').innerText = data.usuario;
-            if(data.nivel === 'Master') document.getElementById('btn-master').style.display = 'block';
-            init();
+            sessionStorage.setItem('point_user', JSON.stringify(data));
+            location.reload();
         } else {
             mostrarModal('modalErro', 'Usuário ou senha incorretos.');
         }
     }
 
-    function logout() { userLogado = null; location.reload(); }
+    function logout() { sessionStorage.clear(); location.reload(); }
 
-    // GESTÃO MASTER DE USUÁRIOS
-    async function abrirGestaoUsuarios() {
-        const { data } = await supabaseClient.from('usuarios').select('*').order('usuario');
-        const corpo = document.getElementById('lista-usuarios-corpo');
-        corpo.innerHTML = "";
-        data.forEach(u => {
-            corpo.innerHTML += `<tr><td>${u.usuario}</td><td>${u.nivel}</td><td><button onclick="removerUsuario('${u.id}')" style="color:red; font-size:10px;">Excluir</button></td></tr>`;
-        });
-        document.getElementById('modalUsuarios').style.display = 'flex';
-    }
-
-    async function adicionarUsuario() {
-        const n = document.getElementById('new_user_name').value.trim();
-        const p = document.getElementById('new_user_pass').value.trim();
-        const l = document.getElementById('new_user_level').value;
-        if(!n || !p) return alert("Preencha nome e senha");
-        const { error } = await supabaseClient.from('usuarios').insert([{ usuario: n, senha: p, nivel: l }]);
-        if(!error) { alert("Usuário cadastrado!"); abrirGestaoUsuarios(); }
-    }
-
-    async function removerUsuario(id) {
-        if(!confirm("Deseja mesmo excluir este usuário?")) return;
-        await supabaseClient.from('usuarios').delete().eq('id', id);
-        abrirGestaoUsuarios();
-    }
-
-    // INICIALIZAÇÃO E MAPA
     async function init() {
         const { data: aptos } = await supabaseClient.from('apartamentos').select('*').order('nome_apto');
         aptosGlobais = aptos || [];
@@ -278,7 +273,7 @@
                             dur++; tempD++;
                         }
                         const cod = {'Booking':'B','AirBnb':'A','VRBO':'V','D':'D','P':'P'}[resA.origem] || "R";
-                        html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal} - 3Adt</td>`;
+                        html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'} cell-reserva" data-guest="${resA.guest_principal.toLowerCase()}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal} - 3Adt</td>`;
                         d += (dur - 1);
                     } else html += `<td></td>`;
                 }
@@ -288,7 +283,108 @@
         html += `</tbody></table>`; container.innerHTML += html; return container;
     }
 
-    // IMPRESSÕES COM LIMPEZA DE TELA
+    // BUSCA LOCALIZAR NO MAPA
+    function localizarNoMapa() {
+        const busca = document.getElementById('busca-hospede').value.toLowerCase().trim();
+        document.querySelectorAll('.cell-reserva').forEach(el => {
+            el.classList.remove('highlight-search');
+            if (busca !== "" && el.getAttribute('data-guest').includes(busca)) {
+                el.classList.add('highlight-search');
+            }
+        });
+    }
+
+    // LISTA HISTÓRICA ESTILO PLANILHA
+    async function abrirHistorico() {
+        const { data } = await supabaseClient.from('reservas').select('*');
+        const sorted = data.sort((a,b) => new Date(a.data_checkin) - new Date(b.data_checkin) || a.guest_principal.localeCompare(b.guest_principal));
+        const corpo = document.getElementById('corpo-historico');
+        corpo.innerHTML = "";
+        sorted.forEach(r => {
+            const aptoNome = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "N/A";
+            const status = r.cancelada ? '<b style="color:red">Cancelada</b>' : '<b style="color:green">Ativa</b>';
+            const dataIn = new Date(r.data_checkin + "T12:00:00").toLocaleDateString('pt-BR');
+            const dataOut = new Date(r.data_checkout + "T12:00:00").toLocaleDateString('pt-BR');
+            corpo.innerHTML += `
+                <tr onclick="prepararEdicao('${r.id}'); fecharModais();" class="${r.cancelada ? 'res-cancelada' : ''}">
+                    <td>${aptoNome}</td><td>${r.guest_principal}</td><td>${dataIn}</td><td>${dataOut}</td>
+                    <td>${r.noites}</td><td>${r.origem}</td><td>${r.ayrton_reserva_id || ""}</td>
+                    <td>$${r.valor_creditado || 0}</td><td>${status}</td>
+                </tr>`;
+        });
+        document.getElementById('modalHistorico').style.display = 'flex';
+    }
+
+    async function salvarFinal() {
+        const id = document.getElementById('edit_id').value;
+        const r = {
+            apto_id: document.getElementById('apto_id').value,
+            guest_principal: document.getElementById('guest_principal').value,
+            data_checkin: document.getElementById('data_checkin').value || null,
+            data_checkout: document.getElementById('data_checkout').value || null,
+            origem: document.getElementById('origem').value,
+            noites: document.getElementById('noites').value,
+            invoice_id: document.getElementById('invoice_id').value,
+            ayrton_reserva_id: document.getElementById('ayrton_reserva_id').value,
+            cancelada: document.getElementById('cancelada').checked,
+            valor_creditado: document.getElementById('valor_creditado').value || 0,
+            data_credito: document.getElementById('data_credito').value || null,
+            valor_comissao: document.getElementById('valor_comissao').value || 0,
+            data_comissao: document.getElementById('data_comissao').value || null,
+            usuario_alterou: userLogado.usuario,
+            data_alteracao: new Date().toISOString(),
+            observacoes: document.getElementById('observacoes').value
+        };
+        const { error } = id ? await supabaseClient.from('reservas').update(r).eq('id', id) : await supabaseClient.from('reservas').insert([r]);
+        if (!error) location.reload();
+        else alert(error.message);
+    }
+
+    function prepararEdicao(id) {
+        const r = reservasGlobais.find(res => res.id === id);
+        if (!r) { 
+            // Se não achou no mapa (ex: cancelada), busca na lista global carregada no init/historico
+            supabaseClient.from('reservas').select('*').eq('id', id).single().then(({data}) => carregarNoForm(data));
+        } else { carregarNoForm(r); }
+    }
+
+    function carregarNoForm(r) {
+        document.getElementById('edit_id').value = r.id;
+        document.getElementById('form-titulo').innerText = "Editar Reserva";
+        document.getElementById('cancelada').checked = r.cancelada;
+        document.getElementById('guest_principal').value = r.guest_principal;
+        document.getElementById('apto_id').value = r.apto_id;
+        document.getElementById('data_checkin').value = fmt(r.data_checkin);
+        document.getElementById('data_checkout').value = fmt(r.data_checkout);
+        document.getElementById('noites').value = r.noites;
+        document.getElementById('origem').value = r.origem;
+        document.getElementById('invoice_id').value = r.invoice_id || "";
+        document.getElementById('ayrton_reserva_id').value = r.ayrton_reserva_id || "";
+        document.getElementById('observacoes').value = r.observacoes || "";
+        document.getElementById('valor_creditado').value = r.valor_creditado;
+        document.getElementById('data_credito').value = fmt(r.data_credito);
+        document.getElementById('btn-excluir').style.display = "block";
+        document.getElementById('btn-limpar').style.display = "block";
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function resetarFormulario() { location.reload(); }
+    function mudarMes(v) { mesBase.setMonth(mesBase.getMonth() + v); renderizarMapaTriplo(); }
+    function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
+    function toggleExtras() { const div = document.getElementById('secao-extras'); div.style.display = (div.style.display === 'block') ? 'none' : 'block'; }
+    function confirmarExclusao() { if(confirm("Excluir definitivamente?")) excluirDeVez(); }
+    async function excluirDeVez() { await supabaseClient.from('reservas').delete().eq('id', document.getElementById('edit_id').value); location.reload(); }
+    function abrirModalEscolhaFaxina() { document.getElementById('modalFaxina').style.display = 'flex'; }
+    function verificarReserva() {
+        const cin = document.getElementById('data_checkin').value;
+        const cout = document.getElementById('data_checkout').value;
+        if (cin && cout) {
+            const d1 = new Date(cin + "T12:00:00"); const d2 = new Date(cout + "T12:00:00");
+            const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+            document.getElementById('noites').value = diff > 0 ? diff : 0;
+        }
+    }
+
     function imprimirMapa4Meses() {
         const area = document.getElementById('area-impressao');
         area.innerHTML = "";
@@ -305,18 +401,15 @@
                 if (i + j < totalMeses) {
                     const df = new Date(dataInicio.getFullYear(), dataInicio.getMonth() + i + j, 1);
                     const mesBloco = criarTabelaMes(df, reservasAtivas);
-                    mesBloco.style.border = "1px solid black";
-                    mesBloco.style.marginBottom = "5px";
+                    mesBloco.classList.add('mes-print');
                     folha.appendChild(mesBloco);
                 }
             }
             area.appendChild(folha);
         }
         window.print();
-        area.innerHTML = ""; // LIMPA APÓS IMPRIMIR
+        area.innerHTML = "";
     }
-
-    function abrirModalEscolhaFaxina() { document.getElementById('modalFaxina').style.display = 'flex'; }
 
     function gerarRelatorioFaxinaFinal() {
         const mesSel = parseInt(document.getElementById('sel_mes_faxina').value);
@@ -347,69 +440,8 @@
         folha.innerHTML = html;
         area.appendChild(folha);
         window.print();
-        area.innerHTML = ""; // LIMPA APÓS IMPRIMIR
+        area.innerHTML = "";
         fecharModais();
-    }
-
-    // CRUD RESERVAS
-    async function salvarFinal() {
-        const id = document.getElementById('edit_id').value;
-        const r = {
-            apto_id: document.getElementById('apto_id').value,
-            guest_principal: document.getElementById('guest_principal').value,
-            data_checkin: document.getElementById('data_checkin').value || null,
-            data_checkout: document.getElementById('data_checkout').value || null,
-            origem: document.getElementById('origem').value,
-            noites: document.getElementById('noites').value,
-            invoice_id: document.getElementById('invoice_id').value,
-            cancelada: document.getElementById('cancelada').checked,
-            valor_creditado: document.getElementById('valor_creditado').value || 0,
-            data_credito: document.getElementById('data_credito').value || null,
-            valor_comissao: document.getElementById('valor_comissao').value || 0,
-            data_comissao: document.getElementById('data_comissao').value || null,
-            usuario_alterou: userLogado.usuario,
-            data_alteracao: new Date().toISOString(),
-            observacoes: document.getElementById('observacoes').value
-        };
-        const { error } = id ? await supabaseClient.from('reservas').update(r).eq('id', id) : await supabaseClient.from('reservas').insert([r]);
-        if (!error) location.reload();
-        else mostrarModal('modalErro', error.message);
-    }
-
-    function prepararEdicao(id) {
-        const r = reservasGlobais.find(res => res.id === id);
-        if (!r) return;
-        document.getElementById('edit_id').value = r.id;
-        document.getElementById('form-titulo').innerText = "Editar Reserva";
-        document.getElementById('cancelada').checked = r.cancelada;
-        document.getElementById('guest_principal').value = r.guest_principal;
-        document.getElementById('apto_id').value = r.apto_id;
-        document.getElementById('data_checkin').value = fmt(r.data_checkin);
-        document.getElementById('data_checkout').value = fmt(r.data_checkout);
-        document.getElementById('noites').value = r.noites;
-        document.getElementById('origem').value = r.origem;
-        document.getElementById('invoice_id').value = r.invoice_id || "";
-        document.getElementById('observacoes').value = r.observacoes || "";
-        document.getElementById('valor_creditado').value = r.valor_creditado;
-        document.getElementById('data_credito').value = fmt(r.data_credito);
-        document.getElementById('btn-excluir').style.display = "block";
-        document.getElementById('btn-limpar').style.display = "block";
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    }
-
-    function mudarMes(v) { mesBase.setMonth(mesBase.getMonth() + v); renderizarMapaTriplo(); }
-    function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
-    function toggleExtras() { const div = document.getElementById('secao-extras'); div.style.display = (div.style.display === 'block') ? 'none' : 'block'; }
-    function confirmarExclusao() { if(confirm("Deseja excluir permanentemente?")) excluirDeVez(); }
-    async function excluirDeVez() { await supabaseClient.from('reservas').delete().eq('id', document.getElementById('edit_id').value); location.reload(); }
-    function verificarReserva() {
-        const cin = document.getElementById('data_checkin').value;
-        const cout = document.getElementById('data_checkout').value;
-        if (cin && cout) {
-            const d1 = new Date(cin + "T12:00:00"); const d2 = new Date(cout + "T12:00:00");
-            const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
-            document.getElementById('noites').value = diff > 0 ? diff : 0;
-        }
     }
 </script>
 </body>
