@@ -9,6 +9,13 @@
         :root { --cor-p: #4299e1; --cor-d: #fff700; --cor-vinho: #800020; --cor-borda: #ddd; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; overflow: hidden; }
         
+        /* TELA DE LOGIN */
+        #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background:#2d3748; z-index:9999; display:flex; justify-content:center; align-items:center; }
+        .login-box { background:white; padding:30px; border-radius:8px; width:300px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); }
+        .login-box h2 { margin-top:0; color:#2d3748; }
+        .login-box input { width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:4px; box-sizing:border-box; }
+        .btn-login { width:100%; padding:10px; background:#38a169; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; }
+
         /* SIDEBAR */
         .sidebar { width: 290px; background: white; padding: 12px; border-right: 1px solid #ddd; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.05); flex-shrink: 0; }
         .sidebar h2 { font-size: 0.9rem; margin-top: 0; color: #2c3e50; border-bottom: 2px solid #38a169; padding-bottom: 5px; }
@@ -19,7 +26,7 @@
         .btn-salvar { width: 100%; padding: 10px; background: #38a169; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; font-size: 13px; }
         .btn-excluir { width: 100%; padding: 8px; background: #e53e3e; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 11px; display: none; }
         .btn-limpar { width: 100%; padding: 5px; background: #718096; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 5px; font-size: 10px; display: none; }
-        .btn-extras { background: #3182ce; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 11px; font-weight: bold; margin: 10px 0; }
+        .btn-util { width: 100%; padding: 6px; background: #edf2f7; border: 1px solid #cbd5e0; border-radius: 4px; cursor: pointer; margin-top: 5px; font-size: 10px; font-weight: bold; color:#4a5568; }
 
         #secao-extras { display: none; background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 10px; }
 
@@ -34,52 +41,52 @@
         .btn-print { background: #2d3748; color: white; border: none; }
         .btn-faxina { background: #805ad5; color: white; border: none; }
 
-        /* TABELAS DO MAPA NA TELA */
-        .mes-container { margin-bottom: 15px; background: white; border-radius: 6px; padding: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
-        .titulo-mes-tabela { font-weight: bold; color: #2d3748; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; padding-left: 5px; }
-        
+        /* MAPA */
         table { border-collapse: collapse; width: 100%; table-layout: fixed; }
         th, td { border: 1px solid var(--cor-borda); height: 26px; text-align: center; font-size: 9px; overflow: hidden; white-space: nowrap; text-overflow: clip; padding: 0; }
-        
         .col-apto { width: 130px; text-align: left; padding-left: 8px; background: #f8f9fa; font-weight: bold; font-size: 9px; }
         .cabecalho-dias { background: #2d3748; color: white; height: 18px; }
-        .cabecalho-semana { background: #f1f5f9; color: #4a5568; height: 16px; font-size: 8px; font-weight: bold; }
-        
         .reserva-p { background-color: var(--cor-p); font-size: 11px; font-weight: bold; cursor: pointer; }
         .reserva-d { background-color: var(--cor-d); font-size: 11px; font-weight: bold; cursor: pointer; }
         .reserva-vinho { background-color: var(--cor-vinho); } 
-        
+
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
         .modal-box { background: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 350px; width: 90%; }
-        .btn-modal { padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 5px; font-size: 13px; }
+        
+        #user-info { font-size: 10px; color: #718096; margin-bottom: 10px; text-align: right; }
 
-        /* --- CONFIGURAÇÕES DE IMPRESSÃO --- */
-        #area-impressao { display: none; }
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             body * { visibility: hidden; }
             #area-impressao, #area-impressao * { visibility: visible; }
             #area-impressao { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; }
-            .print-mapa { page-break-after: always; width: 100%; display: block; }
-            .mes-print { margin-bottom: 4px !important; border: 1px solid #000 !important; padding: 0 !important; }
-            .mes-print .titulo-mes-tabela { font-size: 11px; margin: 2px 0; }
-            .mes-print table th, .mes-print table td { height: 20px !important; line-height: 20px !important; font-size: 9px !important; padding: 0 !important; }
-            .mes-print .cabecalho-dias { height: 16px !important; }
-            .mes-print .cabecalho-semana { height: 14px !important; }
-            .sidebar, .topo-controles, .modal-overlay { display: none !important; }
+            .print-mapa { page-break-after: always; width: 100%; }
+            .mes-print table td { height: 20px !important; line-height: 20px !important; font-size: 9px !important; }
+            .sidebar, .topo-controles, #tela-login { display: none !important; }
         }
     </style>
 </head>
 <body>
 
+<!-- TELA DE LOGIN -->
+<div id="tela-login">
+    <div class="login-box">
+        <h2>Acesso Painel</h2>
+        <input type="text" id="login_user" placeholder="Usuário">
+        <input type="password" id="login_pass" placeholder="Senha">
+        <button class="btn-login" onclick="realizarLogin()">Entrar</button>
+        <p style="font-size:10px; margin-top:15px; color:#666; cursor:pointer;" onclick="recuperarSenha()">Esqueci minha senha</p>
+    </div>
+</div>
+
 <div class="sidebar">
+    <div id="user-info">Usuário: <b id="nome-logado">...</b></div>
     <h2 id="form-titulo">Nova Reserva</h2>
     <input type="hidden" id="edit_id">
     
-    <!-- CAMPO CANCELAMENTO -->
-    <div class="campo" style="display: flex; align-items: center; gap: 8px; background: #fff5f5; padding: 5px; border-radius: 4px; border: 1px solid #feb2b2; margin-bottom: 12px;">
-        <input type="checkbox" id="cancelada" style="width: 18px; height: 18px; cursor: pointer;">
-        <label for="cancelada" style="margin: 0; color: #c53030; cursor: pointer; text-transform: none; font-size: 11px;">RESERVA CANCELADA</label>
+    <div class="campo" style="display: flex; align-items: center; gap: 8px; background: #fff5f5; padding: 5px; border-radius: 4px; border: 1px solid #feb2b2;">
+        <input type="checkbox" id="cancelada" style="width: 18px; height: 18px;">
+        <label style="margin: 0; color: #c53030; font-size: 11px;">RESERVA CANCELADA</label>
     </div>
 
     <div class="campo"><label>Apartamento *</label><select id="apto_id" onchange="verificarReserva()"></select></div>
@@ -88,22 +95,28 @@
         <div class="campo" style="flex: 1;"><label>Check-In *</label><input type="date" id="data_checkin" onchange="verificarReserva()"></div>
         <div class="campo" style="flex: 1;"><label>Check-Out *</label><input type="date" id="data_checkout" onchange="verificarReserva()"></div>
     </div>
-    <div class="campo"><label>Noites</label><input type="text" id="noites" readonly style="background: #f0f0f0; font-weight: bold;"></div>
+    <div class="campo"><label>Noites</label><input type="text" id="noites" readonly style="background: #f0f0f0;"></div>
     <div class="campo"><label>Origem *</label><select id="origem"><option value="Booking">Booking</option><option value="AirBnb">AirBnb</option><option value="VRBO">VRBO</option><option value="D">Direto (D)</option><option value="P">Pendente (P)</option></select></div>
     <div class="campo"><label>Invoice / ID</label><input type="text" id="invoice_id"></div>
     <div class="campo"><label>OBS:</label><textarea id="observacoes" rows="2"></textarea></div>
-    <button type="button" class="btn-extras" onclick="toggleExtras()">Exibir Campos Extras</button>
+    
+    <button type="button" class="btn-util" style="background:#3182ce; color:white;" onclick="toggleExtras()">EXIBIR CAMPOS EXTRAS</button>
+    
     <div id="secao-extras">
         <div class="campo"><label>Valor Creditado (R$)</label><input type="number" step="0.01" id="valor_creditado"></div>
         <div class="campo"><label>Data Crédito</label><input type="date" id="data_credito"></div>
         <div class="campo"><label>Valor Comissão (R$)</label><input type="number" step="0.01" id="valor_comissao"></div>
         <div class="campo"><label>Data Comissão</label><input type="date" id="data_comissao"></div>
-        <div class="campo"><label>Usuário que Alterou</label><input type="text" id="usuario_alterou" readonly style="background:#eee"></div>
-        <div class="campo"><label>Data Alteração</label><input type="text" id="data_alteracao" readonly style="background:#eee"></div>
     </div>
+    
     <button id="btn-salvar" class="btn-salvar" onclick="salvarFinal()">Salvar Reserva</button>
-    <button id="btn-limpar" class="btn-limpar" onclick="resetarFormulario()">Novo (Limpar)</button>
-    <button id="btn-excluir" class="btn-excluir" onclick="confirmarExclusao()">Excluir Permanente do Banco</button>
+    <button class="btn-limpar" onclick="location.reload()">Novo (Limpar)</button>
+    <button id="btn-excluir" class="btn-excluir" onclick="confirmarExclusao()">Excluir Permanentemente</button>
+    
+    <hr>
+    <button class="btn-util" onclick="abrirModalSenha()">Alterar Minha Senha</button>
+    <button id="btn-admin-users" class="btn-util" style="display:none;" onclick="alert('Funcionalidade de gestão de usuários no painel Supabase.')">Gerenciar Usuários</button>
+    <button class="btn-util" style="background:#fed7d7; color:#c53030;" onclick="logout()">Sair do Sistema</button>
 </div>
 
 <div class="main-content">
@@ -123,26 +136,32 @@
 
 <div id="area-impressao"></div>
 
-<!-- Modal Faxina -->
+<!-- Modais -->
+<div id="modalSenha" class="modal-overlay">
+    <div class="modal-box">
+        <h3>Alterar Senha</h3>
+        <input type="password" id="nova_senha" placeholder="Nova Senha">
+        <button class="btn-login" onclick="salvarNovaSenha()">Atualizar</button>
+        <button class="btn-limpar" style="display:inline-block" onclick="fecharModais()">Cancelar</button>
+    </div>
+</div>
+
 <div id="modalFaxina" class="modal-overlay">
     <div class="modal-box">
         <h3>Relatório de Faxina</h3>
         <div class="campo"><label>Mês:</label><select id="sel_mes_faxina"><option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option><option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option><option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option><option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option></select></div>
         <div class="campo"><label>Ano:</label><input type="number" id="sel_ano_faxina" value="2026"></div>
-        <button class="btn-modal" style="background:#38a169;color:white" onclick="gerarRelatorioFaxinaFinal()">Gerar</button>
-        <button class="btn-modal" onclick="fecharModais()">Sair</button>
+        <button class="btn-modal" style="background:#38a169;color:white; padding:10px; border:none; border-radius:4px;" onclick="gerarRelatorioFaxinaFinal()">Gerar</button>
+        <button class="btn-modal" style="padding:10px; border:none;" onclick="fecharModais()">Sair</button>
     </div>
 </div>
-
-<div id="modalErro" class="modal-overlay"><div class="modal-box"><h3 style="color:#e53e3e">Aviso</h3><p id="msgErro"></p><button class="btn-modal" onclick="fecharModais()">OK</button></div></div>
-<div id="modalSucesso" class="modal-overlay"><div class="modal-box"><h3>✔ Sucesso!</h3><p id="msgSucessoTxt"></p><button class="btn-modal" onclick="location.reload()">OK</button></div></div>
-<div id="modalConfirmarExcluir" class="modal-overlay"><div class="modal-box"><h3>Excluir?</h3><button class="btn-modal" onclick="excluirDeVez()">Confirmar</button><button class="btn-modal" onclick="fecharModais()">Cancelar</button></div></div>
 
 <script>
     const SB_URL = "https://eqoayyftpddombylgxpw.supabase.co";
     const SB_KEY = "sb_publishable_52ePL6AdYLm58359gM4VJg_x5bfdamZ";
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
+    let userLogado = null;
     let mesBase = new Date(); mesBase.setDate(1);
     let aptosGlobais = [];
     let reservasGlobais = [];
@@ -150,6 +169,44 @@
 
     function fmt(d) { if(!d) return ""; return d.toString().split('T')[0].split(' ')[0].trim(); }
 
+    // LOGIN E SEGURANÇA
+    async function realizarLogin() {
+        const u = document.getElementById('login_user').value;
+        const s = document.getElementById('login_pass').value;
+        const { data, error } = await supabaseClient.from('usuarios').select('*').eq('usuario', u).eq('senha', s).single();
+        
+        if (data) {
+            userLogado = data;
+            document.getElementById('tela-login').style.display = 'none';
+            document.getElementById('nome-logado').innerText = data.usuario + " (" + data.nivel + ")";
+            if(data.nivel === 'Master') document.getElementById('btn-admin-users').style.display = 'block';
+            registrarLog("Login", "Usuário acessou o sistema");
+            init();
+        } else {
+            alert("Usuário ou senha incorretos.");
+        }
+    }
+
+    function logout() { sessionStorage.clear(); location.reload(); }
+
+    async function registrarLog(acao, detalhes) {
+        if (!userLogado) return;
+        await supabaseClient.from('logs').insert([{ usuario: userLogado.usuario, acao: acao, detalhes: detalhes }]);
+    }
+
+    async function recuperarSenha() {
+        const email = prompt("Digite seu e-mail cadastrado:");
+        if(!email) return;
+        const { data } = await supabaseClient.from('usuarios').select('usuario, senha').eq('email', email).single();
+        if(data) {
+            alert("Sua senha foi enviada para processamento. (Simulação: Sua senha atual é " + data.senha + ")");
+            registrarLog("Recuperação", "Solicitou recuperação de senha para o e-mail " + email);
+        } else {
+            alert("E-mail não encontrado.");
+        }
+    }
+
+    // INICIALIZAÇÃO
     async function init() {
         const { data: aptos } = await supabaseClient.from('apartamentos').select('*').order('nome_apto');
         aptosGlobais = aptos || [];
@@ -162,7 +219,6 @@
     async function renderizarMapaTriplo() {
         const { data: reservas } = await supabaseClient.from('reservas').select('*');
         reservasGlobais = reservas || [];
-        // Filtra apenas as não canceladas para o mapa
         const reservasAtivas = reservasGlobais.filter(r => r.cancelada !== true);
         const area = document.getElementById('area-mapas');
         area.innerHTML = "";
@@ -175,44 +231,37 @@
     function criarTabelaMes(dataRef, reservas) {
         const ano = dataRef.getFullYear(); const mes = dataRef.getMonth();
         const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-        const container = document.createElement('div'); container.className = 'mes-container';
-        const titulo = document.createElement('div'); titulo.className = 'titulo-mes-tabela';
-        titulo.innerText = dataRef.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+        const container = document.createElement('div'); container.style.marginBottom = "15px"; container.style.background="white"; container.style.padding="5px";
+        const titulo = document.createElement('div'); titulo.style.fontWeight="bold"; titulo.innerText = dataRef.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
         container.appendChild(titulo);
-        let html = `<table><thead><tr class="cabecalho-dias"><th class="col-apto">Dia</th>`;
+
+        let html = `<table><thead><tr class="cabecalho-dias"><th class="col-apto">Apto</th>`;
         for (let d = 1; d <= ultimoDia; d++) html += `<th>${d}</th>`;
-        html += `</tr><tr class="cabecalho-semana"><th class="col-apto">Apto</th>`;
-        for (let d = 1; d <= ultimoDia; d++) html += `<th>${diasSemanaNomes[new Date(ano, mes, d).getDay()]}</th>`;
         html += `</tr></thead><tbody>`;
+
         aptosGlobais.forEach(apto => {
             html += `<tr><td class="col-apto">${apto.nome_apto}</td>`;
             for (let d = 1; d <= ultimoDia; d++) {
                 const dIso = new Date(ano, mes, d).toISOString().split('T')[0];
                 const saindoH = reservas.find(r => r.apto_id === apto.id && fmt(r.data_checkout) === dIso);
                 const entrandoH = reservas.find(r => r.apto_id === apto.id && fmt(r.data_checkin) === dIso);
+
                 if (saindoH && entrandoH) {
                     html += `<td class="reserva-vinho" onclick="prepararEdicao('${entrandoH.id}')"></td>`;
                 } else {
                     const resA = reservas.find(r => r.apto_id === apto.id && dIso >= fmt(r.data_checkin) && dIso <= fmt(r.data_checkout));
                     if (resA && (dIso === fmt(resA.data_checkin) || d === 1 || (saindoH === undefined && dIso > fmt(resA.data_checkin)))) {
-                        let ok = false;
-                        const ontemIso = new Date(ano, mes, d - 1).toISOString().split('T')[0];
-                        const foiT = reservas.find(r => r.apto_id === apto.id && fmt(r.data_checkout) === ontemIso && reservas.some(r2 => r2.apto_id === apto.id && fmt(r2.data_checkin) === ontemIso));
-                        if (dIso === fmt(resA.data_checkin) && !saindoH) ok = true;
-                        else if (foiT && dIso > ontemIso) ok = true;
-                        else if (d === 1) ok = true;
-                        if (ok) {
-                            let dur = 0; let tempD = d;
-                            while(tempD <= ultimoDia) {
-                                const dL = new Date(ano, mes, tempD).toISOString().split('T')[0];
-                                if (dL > fmt(resA.data_checkout)) break;
-                                if (reservas.some(r => r.apto_id === apto.id && fmt(r.data_checkout) === dL && reservas.some(r2 => r2.apto_id === apto.id && fmt(r2.data_checkin) === dL)) && tempD > d) break;
-                                dur++; tempD++;
-                            }
-                            const cod = {'Booking':'B','AirBnb':'A','VRBO':'V','D':'D','P':'P'}[resA.origem] || "R";
-                            html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal}</td>`;
-                            d += (dur - 1);
-                        } else html += `<td></td>`;
+                        let dur = 0; let tempD = d;
+                        while(tempD <= ultimoDia) {
+                            const dL = new Date(ano, mes, tempD).toISOString().split('T')[0];
+                            if (dL > fmt(resA.data_checkout)) break;
+                            if (reservas.some(r => r.apto_id === apto.id && fmt(r.data_checkout) === dL && reservas.some(r2 => r2.apto_id === apto.id && fmt(r2.data_checkin) === dL)) && tempD > d) break;
+                            dur++; tempD++;
+                        }
+                        const cod = {'Booking':'B','AirBnb':'A','VRBO':'V','D':'D','P':'P'}[resA.origem] || "R";
+                        // FORMATAÇÃO DO NOME CONFORME SOLICITADO
+                        html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal} - 3Adt</td>`;
+                        d += (dur - 1);
                     } else html += `<td></td>`;
                 }
             }
@@ -221,38 +270,30 @@
         html += `</tbody></table>`; container.innerHTML += html; return container;
     }
 
-    // FUNÇÃO PARA TRATAR DATA VAZIA (Converte "" para null)
-    function tratarData(valor) {
-        return valor === "" ? null : valor;
-    }
-
     async function salvarFinal() {
         const id = document.getElementById('edit_id').value;
-        const r = { 
-            apto_id: document.getElementById('apto_id').value, 
-            guest_principal: document.getElementById('guest_principal').value, 
-            data_checkin: tratarData(document.getElementById('data_checkin').value), 
-            data_checkout: tratarData(document.getElementById('data_checkout').value), 
-            noites: document.getElementById('noites').value, 
-            origem: document.getElementById('origem').value, 
-            invoice_id: document.getElementById('invoice_id').value, 
-            observacoes: document.getElementById('observacoes').value,
+        const r = {
+            apto_id: document.getElementById('apto_id').value,
+            guest_principal: document.getElementById('guest_principal').value,
+            data_checkin: document.getElementById('data_checkin').value || null,
+            data_checkout: document.getElementById('data_checkout').value || null,
+            origem: document.getElementById('origem').value,
+            noites: document.getElementById('noites').value,
+            invoice_id: document.getElementById('invoice_id').value,
             cancelada: document.getElementById('cancelada').checked,
             valor_creditado: document.getElementById('valor_creditado').value || 0,
-            data_credito: tratarData(document.getElementById('data_credito').value),
+            data_credito: document.getElementById('data_credito').value || null,
             valor_comissao: document.getElementById('valor_comissao').value || 0,
-            data_comissao: tratarData(document.getElementById('data_comissao').value),
-            usuario_alterou: "Sistema",
+            data_comissao: document.getElementById('data_comissao').value || null,
+            usuario_alterou: userLogado.usuario,
             data_alteracao: new Date().toISOString()
         };
 
         const { error } = id ? await supabaseClient.from('reservas').update(r).eq('id', id) : await supabaseClient.from('reservas').insert([r]);
-        
-        if (error) {
-            alert("ERRO AO SALVAR: " + error.message);
-        } else {
+        if (!error) {
+            registrarLog(id ? "Edição" : "Cadastro", "Reserva de " + r.guest_principal + " no apto " + r.apto_id);
             location.reload();
-        }
+        } else alert("Erro: " + error.message);
     }
 
     function prepararEdicao(id) {
@@ -260,9 +301,9 @@
         if (!r) return;
         document.getElementById('edit_id').value = r.id;
         document.getElementById('form-titulo').innerText = "Editar Reserva";
-        document.getElementById('cancelada').checked = r.cancelada || false;
-        document.getElementById('apto_id').value = r.apto_id;
+        document.getElementById('cancelada').checked = r.cancelada;
         document.getElementById('guest_principal').value = r.guest_principal;
+        document.getElementById('apto_id').value = r.apto_id;
         document.getElementById('data_checkin').value = fmt(r.data_checkin);
         document.getElementById('data_checkout').value = fmt(r.data_checkout);
         document.getElementById('noites').value = r.noites;
@@ -275,18 +316,48 @@
         document.getElementById('data_comissao').value = fmt(r.data_comissao);
 
         document.getElementById('btn-excluir').style.display = "block";
-        document.getElementById('btn-limpar').style.display = "block";
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
+    async function salvarNovaSenha() {
+        const ns = document.getElementById('nova_senha').value;
+        if(!ns) return;
+        const { error } = await supabaseClient.from('usuarios').update({ senha: ns }).eq('id', userLogado.id);
+        if(!error) {
+            alert("Senha alterada com sucesso!");
+            registrarLog("Segurança", "Alterou a própria senha");
+            fecharModais();
+        }
+    }
+
+    async function excluirDeVez() {
+        const id = document.getElementById('edit_id').value;
+        const r = reservasGlobais.find(res => res.id === id);
+        const { error } = await supabaseClient.from('reservas').delete().eq('id', id);
+        if (!error) {
+            registrarLog("Exclusão", "Apagou reserva de " + r.guest_principal);
+            location.reload();
+        }
+    }
+
     function fecharModais() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+    function abrirModalSenha() { document.getElementById('modalSenha').style.display='flex'; }
+    function toggleExtras() { const s = document.getElementById('secao-extras'); s.style.display = s.style.display === 'block' ? 'none' : 'block'; }
     function mudarMes(v) { mesBase.setMonth(mesBase.getMonth() + v); renderizarMapaTriplo(); }
     function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
-    function toggleExtras() { const div = document.getElementById('secao-extras'); div.style.display = (div.style.display === 'block') ? 'none' : 'block'; }
-    function resetarFormulario() { location.reload(); }
-    async function excluirDeVez() { const id = document.getElementById('edit_id').value; await supabaseClient.from('reservas').delete().eq('id', id); location.reload(); }
+    function confirmarExclusao() { if(confirm("Deseja excluir permanentemente?")) excluirDeVez(); }
     function abrirModalEscolhaFaxina() { document.getElementById('modalFaxina').style.display = 'flex'; }
     
+    function verificarReserva() {
+        const cin = document.getElementById('data_checkin').value;
+        const cout = document.getElementById('data_checkout').value;
+        if (cin && cout) {
+            const d1 = new Date(cin + "T12:00:00"); const d2 = new Date(cout + "T12:00:00");
+            const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+            document.getElementById('noites').value = diff > 0 ? diff : 0;
+        }
+    }
+
     function imprimirMapa4Meses() {
         const area = document.getElementById('area-impressao');
         area.innerHTML = "";
@@ -315,17 +386,39 @@
         window.print();
     }
 
-    function verificarReserva() {
-        const cin = document.getElementById('data_checkin').value;
-        const cout = document.getElementById('data_checkout').value;
-        if (cin && cout) {
-            const d1 = new Date(cin + "T12:00:00"); const d2 = new Date(cout + "T12:00:00");
-            const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
-            document.getElementById('noites').value = diff > 0 ? diff : 0;
-        }
+    // Função Faxina (Retrato Letter)
+    function gerarRelatorioFaxinaFinal() {
+        const mesSel = parseInt(document.getElementById('sel_mes_faxina').value);
+        const anoSel = parseInt(document.getElementById('sel_ano_faxina').value);
+        const area = document.getElementById('area-impressao');
+        area.innerHTML = "";
+        const dataRef = new Date(anoSel, mesSel, 1);
+        const mesNome = dataRef.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+        let listaFaxinas = [];
+        reservasGlobais.forEach(r => {
+            const dOut = new Date(r.data_checkout + "T12:00:00");
+            if (dOut.getMonth() === mesSel && dOut.getFullYear() === anoSel) {
+                const apto = aptosGlobais.find(a => a.id === r.apto_id);
+                listaFaxinas.push({ data: r.data_checkout, apto: apto ? apto.nome_apto : "N/A", valor: apto ? (apto.preco_faxina || 0) : 0 });
+            }
+        });
+        listaFaxinas.sort((a, b) => new Date(a.data) - new Date(b.data));
+        const folha = document.createElement('div');
+        folha.style.padding = "40px";
+        let html = `<h2 style="text-transform:uppercase">Relatório de Faxinas - ${mesNome}</h2>`;
+        html += `<table border="1" style="width:100%; border-collapse:collapse; font-family:Arial"><thead><tr style="background:#999"><th>Item</th><th>Data</th><th>Apartamento</th><th>Valor</th></tr></thead><tbody>`;
+        let total = 0;
+        listaFaxinas.forEach((f, idx) => {
+            html += `<tr><td style="text-align:center">${idx+1}</td><td style="text-align:center">${f.data.split('-').reverse().join('/')}</td><td>${f.apto}</td><td style="text-align:right; padding-right:5px">$${f.valor.toFixed(2)}</td></tr>`;
+            total += f.valor;
+        });
+        html += `<tr style="font-weight:bold"><td colspan="3" style="text-align:right; padding-right:10px">TOTAL GERAL A PAGAR NO MÊS: ➔</td><td style="background:#999; text-align:center">$${total.toFixed(2)}</td></tr></tbody></table>`;
+        folha.innerHTML = html;
+        area.appendChild(folha);
+        window.print();
+        fecharModais();
     }
 
-    init();
 </script>
 </body>
 </html>
