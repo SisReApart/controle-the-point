@@ -9,7 +9,7 @@
         :root { --cor-p: #4299e1; --cor-d: #fff700; --cor-vinho: #800020; --cor-borda: #ddd; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; overflow: hidden; }
         
-        /* TELA DE LOGIN */
+        /* LOGIN */
         #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background:#2d3748; z-index:9999; display:none; justify-content:center; align-items:center; }
         .login-box { background:white; padding:30px; border-radius:8px; width:300px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); }
         .login-box input { width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:4px; box-sizing:border-box; }
@@ -29,9 +29,14 @@
 
         #secao-extras { display: none; background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 10px; }
 
-        /* CONTEÚDO PRINCIPAL */
+        /* CONTEÚDO */
         .main-content { flex: 1; padding: 5px 10px; overflow-y: auto; display: flex; flex-direction: column; background: #edf2f7; }
         .topo-controles { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: sticky; top: 0; z-index: 100; background: #edf2f7; padding: 10px 5px; gap: 10px; }
+        
+        /* ALERTA DE SEQUÊNCIA AYRTON */
+        #alerta-sequencia { display: none; background: #fff5f5; color: #c53030; padding: 10px; border-radius: 6px; border: 1px solid #feb2b2; font-weight: bold; margin-bottom: 10px; text-align: center; font-size: 13px; animation: blink 2s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
         .controles-esquerda { display: flex; gap: 8px; flex-wrap: wrap; }
         .controles-direita { display: flex; gap: 8px; align-items: center; }
 
@@ -65,7 +70,6 @@
         .tab-hist tr:hover { background: #f0f7ff; cursor: pointer; }
         .res-cancelada { color: red; text-decoration: line-through; opacity: 0.6; }
 
-        /* IMPRESSÃO 4 MESES */
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             body * { visibility: hidden; }
@@ -74,7 +78,7 @@
             .print-mapa { page-break-after: always; width: 100%; display: block; }
             .mes-print { border: 1px solid #000; margin-bottom: 2px !important; }
             .mes-print table td, .mes-print table th { height: 18px !important; line-height: 18px !important; font-size: 8px !important; }
-            .sidebar, .topo-controles, .modal-overlay, #tela-login { display: none !important; }
+            .sidebar, .topo-controles, .modal-overlay, #tela-login, #alerta-sequencia { display: none !important; }
         }
     </style>
 </head>
@@ -108,7 +112,12 @@
     <div class="campo"><label>Noites</label><input type="text" id="noites" readonly style="background: #f0f0f0;"></div>
     <div class="campo"><label>Origem *</label><select id="origem"><option value="Booking">Booking</option><option value="AirBnb">AirBnb</option><option value="VRBO">VRBO</option><option value="D">Direto (D)</option><option value="P">Pendente (P)</option></select></div>
     <div class="campo"><label>Invoice / ID</label><input type="text" id="invoice_id"></div>
-    <div class="campo"><label>#Ayrton</label><input type="text" id="ayrton_reserva_id"></div>
+    
+    <div class="campo"><label>#Ayrton</label><input type="number" id="ayrton_reserva_id"></div>
+    
+    <!-- NOVO CAMPO: NÚMERO DE ADULTOS -->
+    <div class="campo"><label>Nº de Hóspedes (Adultos)</label><input type="number" id="num_adultos" value="3"></div>
+    
     <div class="campo"><label>OBS:</label><textarea id="observacoes" rows="2"></textarea></div>
     
     <button type="button" class="btn-extras" style="background:#3182ce; color:white;" onclick="toggleExtras()">Exibir Campos Extras</button>
@@ -128,6 +137,8 @@
 </div>
 
 <div class="main-content">
+    <div id="alerta-sequencia"></div> <!-- ÁREA DO ALERTA AYRTON -->
+    
     <div class="topo-controles">
         <div class="controles-esquerda">
             <button class="btn-nav btn-print" onclick="imprimirMapa4Meses()">🖨️ Mapa (Print)</button>
@@ -204,12 +215,44 @@
     async function renderizarMapaTriplo() {
         const { data: reservas } = await supabaseClient.from('reservas').select('*');
         reservasGlobais = reservas || [];
+        
+        verificarSequenciaAyrton(); // VERIFICA BURACOS NA NUMERAÇÃO
+
         const reservasAtivas = reservasGlobais.filter(r => r.cancelada !== true);
         const area = document.getElementById('area-mapas');
         area.innerHTML = "";
         for (let i = 0; i < 3; i++) {
             const dataFoco = new Date(mesBase.getFullYear(), mesBase.getMonth() + i, 1);
             area.appendChild(criarTabelaMes(dataFoco, reservasAtivas));
+        }
+    }
+
+    // LÓGICA DE ALERTA DE SEQUÊNCIA AYRTON
+    function verificarSequenciaAyrton() {
+        const numeros = reservasGlobais
+            .map(r => parseInt(r.ayrton_reserva_id))
+            .filter(n => !isNaN(n))
+            .sort((a, b) => a - b);
+        
+        if (numeros.length < 2) return;
+        
+        const min = numeros[0];
+        const max = numeros[numeros.length - 1];
+        let faltante = null;
+
+        for (let i = min; i <= max; i++) {
+            if (!numeros.includes(i)) {
+                faltante = i;
+                break; // Pega o menor número faltante
+            }
+        }
+
+        const divAlerta = document.getElementById('alerta-sequencia');
+        if (faltante) {
+            divAlerta.innerText = `⚠️ ATENÇÃO: A reserva de número #${faltante} (Ayrton) ainda não foi cadastrada no sistema!`;
+            divAlerta.style.display = 'block';
+        } else {
+            divAlerta.style.display = 'none';
         }
     }
 
@@ -250,7 +293,9 @@
                                 dur++; tempD++;
                             }
                             const cod = {'Booking':'B','AirBnb':'A','VRBO':'V','D':'D','P':'P'}[resA.origem] || "R";
-                            html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'} cell-reserva" data-guest="${resA.guest_principal.toLowerCase()}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal} - 3Adt</td>`;
+                            // NOME COM NÚMERO DE ADULTOS DINÂMICO
+                            const adultos = resA.num_adultos || 3;
+                            html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'} cell-reserva" data-guest="${resA.guest_principal.toLowerCase()}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal} - ${adultos}Adt</td>`;
                             d += (dur - 1);
                         } else html += `<td></td>`;
                     } else html += `<td></td>`;
@@ -261,7 +306,7 @@
         html += `</tbody></table>`; container.innerHTML += html; return container;
     }
 
-    // VALIDAÇÃO DE REGRAS DE NEGÓCIO
+    // CORREÇÃO DA FALHA CRÍTICA DE CONFLITO
     async function verificarReserva() {
         const apto = document.getElementById('apto_id').value;
         const cin = document.getElementById('data_checkin').value;
@@ -270,7 +315,6 @@
 
         if (!apto || !cin) return;
 
-        // 1. Bloqueio: Check-out não pode ser menor que Check-in
         if (cout && cout <= cin) {
             mostrarModal('modalErro', 'A data de Check-out deve ser maior que a data de Check-in.');
             document.getElementById('data_checkout').value = "";
@@ -279,7 +323,7 @@
 
         let lista = reservasGlobais.filter(r => r.apto_id === apto && r.id !== editId && r.cancelada !== true);
         
-        // 2. Bloqueio: Conflito de ocupação (Check-in dentro de outra reserva)
+        // CORREÇÃO: Check-in só conflita se for ANTES do Check-out de outra reserva (não igual)
         const conflitoIn = lista.find(r => cin >= fmt(r.data_checkin) && cin < fmt(r.data_checkout));
         if (conflitoIn) {
             mostrarModal('modalErro', `Conflito: O apto já está ocupado por ${conflitoIn.guest_principal}.`);
@@ -287,20 +331,19 @@
             return;
         }
 
-        // 3. Alerta: Espaço insuficiente para reserva mínima (Ex: 18/06 com reserva dia 20/06)
-        const proximaReserva = lista.filter(r => fmt(r.data_checkin) > cin).sort((a,b) => new Date(a.data_checkin) - new Date(b.data_checkin))[0];
+        const proximaReserva = lista.filter(r => fmt(r.data_checkin) >= cin).sort((a,b) => new Date(a.data_checkin) - new Date(b.data_checkin))[0];
         if (proximaReserva) {
             const d1 = new Date(cin + "T12:00:00");
             const d2 = new Date(fmt(proximaReserva.data_checkin) + "T12:00:00");
             const gap = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
-            if (gap < minNoites && !alertaAceito) {
-                mostrarModal('modalAlerta', `Atenção: Já existe uma reserva no dia ${d2.toLocaleDateString('pt-BR')}. O espaço disponível é de apenas ${gap} noites (mínimo é ${minNoites}).`);
+            if (gap < minNoites && !alertaAceito && gap > 0) {
+                mostrarModal('modalAlerta', `Atenção: Existe uma reserva dia ${d2.toLocaleDateString('pt-BR')}. O espaço é de apenas ${gap} noites (mínimo ${minNoites}).`);
             }
         }
 
         if (!cout) return;
 
-        // 4. Bloqueio: Check-out invade outra reserva
+        // CORREÇÃO: Check-out só conflita se invadir o Check-in de outra (não igual)
         const conflitoGeral = lista.find(r => cin < fmt(r.data_checkout) && cout > fmt(r.data_checkin));
         if (conflitoGeral) {
             mostrarModal('modalErro', `Conflito com a reserva de ${conflitoGeral.guest_principal}.`);
@@ -312,34 +355,31 @@
         const diff = Math.round((date2 - date1) / (1000 * 60 * 60 * 24));
         document.getElementById('noites').value = diff > 0 ? diff : "Erro";
 
-        // 5. Alerta: Estadia curta selecionada
         if (diff < minNoites && !alertaAceito && diff > 0) {
-            mostrarModal('modalAlerta', `Estadia curta (${diff} noites). O padrão mínimo é ${minNoites}. Deseja continuar?`);
+            mostrarModal('modalAlerta', `Estadia curta (${diff} noites). O padrão é ${minNoites}. Continuar?`);
         }
     }
 
     function confirmarAlerta() { alertaAceito = true; fecharModais(); }
     function limparDatas() { document.getElementById('data_checkin').value = ""; document.getElementById('data_checkout').value = ""; alertaAceito = false; fecharModais(); }
 
-    // SALVAMENTO E CRUD
-    function tratarData(val) { return (val === "" || val === null) ? null : val; }
-
     async function salvarFinal() {
         const idVal = document.getElementById('edit_id').value;
         const r = {
             apto_id: document.getElementById('apto_id').value,
             guest_principal: document.getElementById('guest_principal').value,
-            data_checkin: tratarData(document.getElementById('data_checkin').value),
-            data_checkout: tratarData(document.getElementById('data_checkout').value),
+            data_checkin: document.getElementById('data_checkin').value || null,
+            data_checkout: document.getElementById('data_checkout').value || null,
             origem: document.getElementById('origem').value,
             noites: document.getElementById('noites').value,
             invoice_id: document.getElementById('invoice_id').value,
             ayrton_reserva_id: document.getElementById('ayrton_reserva_id').value,
+            num_adultos: document.getElementById('num_adultos').value,
             cancelada: document.getElementById('cancelada').checked,
             valor_creditado: document.getElementById('valor_creditado').value || 0,
-            data_credito: tratarData(document.getElementById('data_credito').value),
+            data_credito: document.getElementById('data_credito').value || null,
             valor_comissao: document.getElementById('valor_comissao').value || 0,
-            data_comissao: tratarData(document.getElementById('data_comissao').value),
+            data_comissao: document.getElementById('data_comissao').value || null,
             usuario_alterou: userLogado.usuario,
             data_alteracao: new Date().toISOString(),
             observacoes: document.getElementById('observacoes').value
@@ -364,6 +404,7 @@
             document.getElementById('origem').value = data.origem;
             document.getElementById('invoice_id').value = data.invoice_id || "";
             document.getElementById('ayrton_reserva_id').value = data.ayrton_reserva_id || "";
+            document.getElementById('num_adultos').value = data.num_adultos || 3;
             document.getElementById('observacoes').value = data.observacoes || "";
             document.getElementById('valor_creditado').value = data.valor_creditado;
             document.getElementById('data_credito').value = fmt(data.data_credito);
@@ -421,6 +462,32 @@
             area.appendChild(folha);
         }
         window.print(); area.innerHTML = "";
+    }
+
+    function gerarRelatorioFaxinaFinal() {
+        const mesSel = parseInt(document.getElementById('sel_mes_faxina').value);
+        const anoSel = parseInt(document.getElementById('sel_ano_faxina').value);
+        const area = document.getElementById('area-impressao'); area.innerHTML = "";
+        const dataRef = new Date(anoSel, mesSel, 1);
+        const mesNome = dataRef.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+        let listaFaxinas = [];
+        reservasGlobais.forEach(r => {
+            const dOut = new Date(r.data_checkout + "T12:00:00");
+            if (dOut.getMonth() === mesSel && dOut.getFullYear() === anoSel) {
+                const apto = aptosGlobais.find(a => a.id === r.apto_id);
+                listaFaxinas.push({ data: r.data_checkout, apto: apto ? apto.nome_apto : "N/A", valor: apto ? (apto.preco_faxina || 0) : 0 });
+            }
+        });
+        listaFaxinas.sort((a, b) => new Date(a.data) - new Date(b.data));
+        const folha = document.createElement('div'); folha.style.padding = "40px";
+        let html = `<h2 style="text-transform:uppercase">Relatório de Faxinas - ${mesNome}</h2><table border="1" style="width:100%; border-collapse:collapse; font-family:Arial"><thead><tr style="background:#999"><th>Item</th><th>Data</th><th>Apartamento</th><th>Valor</th></tr></thead><tbody>`;
+        let total = 0;
+        listaFaxinas.forEach((f, idx) => {
+            html += `<tr><td style="text-align:center">${idx+1}</td><td style="text-align:center">${f.data.split('-').reverse().join('/')}</td><td>${f.apto}</td><td style="text-align:right; padding-right:5px">$${f.valor.toFixed(2)}</td></tr>`;
+            total += f.valor;
+        });
+        html += `<tr style="font-weight:bold"><td colspan="3" style="text-align:right; padding-right:10px">TOTAL GERAL A PAGAR NO MÊS: ➔</td><td style="background:#999; text-align:center">$${total.toFixed(2)}</td></tr></tbody></table>`;
+        folha.innerHTML = html; area.appendChild(folha); window.print(); area.innerHTML = ""; fecharModais();
     }
 </script>
 </body>
