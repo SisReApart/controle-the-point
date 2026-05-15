@@ -471,25 +471,25 @@
         const dataRef = new Date(anoSel, mesSel, 1);
         const mesNome = dataRef.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
         
-        // FILTRO DE FAXINA: Exclui as canceladas
         let listaFaxinas = [];
         reservasGlobais.forEach(r => {
             const dOut = new Date(r.data_checkout + "T12:00:00");
             if (!r.cancelada && dOut.getMonth() === mesSel && dOut.getFullYear() === anoSel) {
                 const apto = aptosGlobais.find(a => a.id === r.apto_id);
-                listaFaxinas.push({ data: r.data_checkout, apto: apto ? apto.nome_apto : "N/A", valor: apto ? (apto.preco_faxina || 0) : 0 });
+                listaFaxinas.push({ data: r.data_checkout, hospede: r.guest_principal, apto: apto ? apto.nome_apto : "N/A", valor: apto ? (apto.preco_faxina || 0) : 0 });
             }
         });
 
         listaFaxinas.sort((a, b) => new Date(a.data) - new Date(b.data));
         const folha = document.createElement('div'); folha.style.padding = "40px";
-        let html = `<h2 style="text-transform:uppercase">Relatório de Faxinas - ${mesNome}</h2><table border="1" style="width:100%; border-collapse:collapse; font-family:Arial"><thead><tr style="background:#999"><th>Item</th><th>Data</th><th>Apartamento</th><th>Valor</th></tr></thead><tbody>`;
+        let html = `<h2 style="text-transform:uppercase; font-family:Arial; text-align:center;">Relatório de Faxinas - ${mesNome}</h2>`;
+        html += `<table border="1" style="width:100%; border-collapse:collapse; font-family:Arial"><thead><tr style="background:#999"><th>Item</th><th>Hóspede</th><th>Data</th><th>Apartamento</th><th>Valor</th></tr></thead><tbody>`;
         let total = 0;
         listaFaxinas.forEach((f, idx) => {
-            html += `<tr><td style="text-align:center">${idx+1}</td><td style="text-align:center">${f.data.split('-').reverse().join('/')}</td><td>${f.apto}</td><td style="text-align:right; padding-right:5px">$${f.valor.toFixed(2)}</td></tr>`;
+            html += `<tr><td style="text-align:center">${idx+1}</td><td>${f.hospede}</td><td style="text-align:center">${f.data.split('-').reverse().join('/')}</td><td>${f.apto}</td><td style="text-align:right; padding-right:5px">$${f.valor.toFixed(2)}</td></tr>`;
             total += f.valor;
         });
-        html += `<tr style="font-weight:bold"><td colspan="3" style="text-align:right; padding-right:10px">TOTAL GERAL A PAGAR NO MÊS: ➔</td><td style="background:#999; text-align:center">$${total.toFixed(2)}</td></tr></tbody></table>`;
+        html += `<tr style="font-weight:bold"><td colspan="4" style="text-align:right; padding-right:10px">TOTAL GERAL A PAGAR NO MÊS: ➔</td><td style="background:#999; text-align:center">$${total.toFixed(2)}</td></tr></tbody></table>`;
         folha.innerHTML = html; area.appendChild(folha); window.print(); area.innerHTML = ""; fecharModais();
     }
 </script>
