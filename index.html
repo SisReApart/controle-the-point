@@ -40,6 +40,7 @@
 
         .btn-nav { padding: 8px 12px; cursor: pointer; background: white; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold; font-size: 11px; }
         .btn-lista { background: #2d3748; color: white; border: none; }
+        .input-busca { padding: 8px; border: 2px solid #3182ce; border-radius: 4px; width: 200px; font-size: 12px; }
 
         /* MAPA */
         .mes-container { margin-bottom: 15px; background: white; border-radius: 6px; padding: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); }
@@ -48,6 +49,7 @@
         th, td { border: 1px solid var(--cor-borda); height: 26px; text-align: center; font-size: 9px; overflow: hidden; white-space: nowrap; text-overflow: clip; }
         .col-apto { width: 130px; text-align: left; padding-left: 8px; background: #f8f9fa; font-weight: bold; }
         .cabecalho-dias { background: #2d3748; color: white; height: 18px; }
+        .cabecalho-semana { background: #f1f5f9; color: #4a5568; height: 16px; font-size: 8px; font-weight: bold; }
         .reserva-p { background-color: var(--cor-p); font-weight: bold; cursor: pointer; }
         .reserva-d { background-color: var(--cor-d); font-weight: bold; cursor: pointer; }
         .reserva-vinho { background-color: var(--cor-vinho) !important; border: none; color: transparent !important; cursor: pointer; } 
@@ -280,8 +282,14 @@
         const titulo = document.createElement('div'); titulo.className = 'titulo-mes-tabela';
         titulo.innerText = dataRef.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
         container.appendChild(titulo);
-        let html = `<table><thead><tr class="cabecalho-dias"><th class="col-apto">Apto</th>`;
+
+        let html = `<table><thead><tr class="cabecalho-dias"><th class="col-apto">Dia</th>`;
         for (let d = 1; d <= ultimoDia; d++) html += `<th>${d}</th>`;
+        html += `</tr><tr class="cabecalho-semana"><th class="col-apto">Apto</th>`;
+        for (let d = 1; d <= ultimoDia; d++) {
+            const diaSemana = diasSemanaNomes[new Date(ano, mes, d).getDay()];
+            html += `<th>${diaSemana}</th>`;
+        }
         html += `</tr></thead><tbody>`;
         
         aptosGlobais.forEach(apto => {
@@ -367,11 +375,11 @@
             if (gap < minNoites && !alertaAceito && gap > 0) mostrarModal('modalAlerta', `Espaço de apenas ${gap} noites até a próxima reserva.`);
         }
         if (!cout) return;
-        const conflitoOut = lista.find(r => cout > fmt(r.data_checkin) && cout <= fmt(r.data_checkout));
+        const conflitoOut = lista.find(r => cout > fmt(r.data_checkin) && cout < fmt(r.data_checkout));
         if (conflitoOut) { mostrarModal('modalErro', `Check-out invade outra reserva.`); document.getElementById('data_checkout').value = ""; return; }
         const diff = Math.round((new Date(cout+"T12:00:00") - new Date(cin+"T12:00:00")) / (1000 * 60 * 60 * 24));
         document.getElementById('noites').value = diff;
-        if (diff < minNoites && !alertaAceito && diff > 0) mostrarModal('modalAlerta', `Estadia curta (${diff} noites).`);
+        if (diff < minNoites && !alertaAceito && diff > 0) { mostrarModal('modalAlerta', `Estadia curta (${diff} noites). Continuar?`); }
     }
 
     async function salvarFinal() {
@@ -380,7 +388,7 @@
         const idVal = document.getElementById('edit_id').value;
         const r = {
             apto_id: document.getElementById('apto_id').value, guest_principal: document.getElementById('guest_principal').value,
-            data_checkin: cin || null, data_checkout: document.getElementById('data_checkout').value || null,
+            data_checkin: document.getElementById('data_checkin').value || null, data_checkout: document.getElementById('data_checkout').value || null,
             origem: document.getElementById('origem').value, noites: document.getElementById('noites').value, invoice_id: document.getElementById('invoice_id').value,
             ayrton_reserva_id: document.getElementById('ayrton_reserva_id').value, num_adultos: document.getElementById('num_adultos').value,
             cancelada: document.getElementById('cancelada').checked, valor_creditado: document.getElementById('valor_creditado').value || 0,
@@ -424,6 +432,9 @@
             if (busca !== "" && el.getAttribute('data-guest').includes(busca)) el.classList.add('highlight-search');
         });
     }
+    function resetarFormulario() { location.reload(); }
+    function confirmarAlerta() { alertaAceito = true; fecharModais(); }
+    function limparDatas() { document.getElementById('data_checkin').value = ""; document.getElementById('data_checkout').value = ""; alertaAceito = false; fecharModais(); }
     function mudarMes(v) { mesBase.setMonth(mesBase.getMonth() + v); renderizarMapaTriplo(); }
     function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
     function toggleExtras() { const div = document.getElementById('secao-extras'); div.style.display = div.style.display === 'block' ? 'none' : 'block'; }
@@ -459,14 +470,17 @@
         const area = document.getElementById('area-impressao'); area.innerHTML = "";
         const dataRef = new Date(anoSel, mesSel, 1);
         const mesNome = dataRef.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+        
+        // FILTRO DE FAXINA: Exclui as canceladas
         let listaFaxinas = [];
         reservasGlobais.forEach(r => {
             const dOut = new Date(r.data_checkout + "T12:00:00");
-            if (dOut.getMonth() === mesSel && dOut.getFullYear() === anoSel) {
+            if (!r.cancelada && dOut.getMonth() === mesSel && dOut.getFullYear() === anoSel) {
                 const apto = aptosGlobais.find(a => a.id === r.apto_id);
                 listaFaxinas.push({ data: r.data_checkout, apto: apto ? apto.nome_apto : "N/A", valor: apto ? (apto.preco_faxina || 0) : 0 });
             }
         });
+
         listaFaxinas.sort((a, b) => new Date(a.data) - new Date(b.data));
         const folha = document.createElement('div'); folha.style.padding = "40px";
         let html = `<h2 style="text-transform:uppercase">Relatório de Faxinas - ${mesNome}</h2><table border="1" style="width:100%; border-collapse:collapse; font-family:Arial"><thead><tr style="background:#999"><th>Item</th><th>Data</th><th>Apartamento</th><th>Valor</th></tr></thead><tbody>`;
