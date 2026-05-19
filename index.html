@@ -15,10 +15,9 @@
         .login-box input { width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:4px; box-sizing:border-box; }
         .btn-login { width:100%; padding:10px; background:#38a169; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; }
 
-        /* SIDEBAR AJUSTADA */
+        /* SIDEBAR AJUSTADA (Campos Lado a Lado) */
         .sidebar { width: 310px; background: white; padding: 12px; border-right: 1px solid #ddd; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.05); flex-shrink: 0; }
         .sidebar h2 { font-size: 0.9rem; margin-top: 0; color: #2c3e50; border-bottom: 2px solid #38a169; padding-bottom: 5px; margin-bottom: 10px; }
-        
         .campo { margin-bottom: 8px; }
         .linha-campo { display: flex; gap: 8px; margin-bottom: 8px; }
         .col-70 { flex: 0 0 68%; }
@@ -37,6 +36,14 @@
         .topo-controles { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: sticky; top: 0; z-index: 100; background: #edf2f7; padding: 10px 5px; gap: 10px; }
         
         .controles-esquerda, .controles-direita { display: flex; gap: 8px; align-items: center; }
+
+        /* BUSCA AVANÇADA (RESTAURADA E MELHORADA) */
+        .container-busca { display: flex; align-items: center; gap: 5px; background: #ebf8ff; padding: 5px; border-radius: 6px; border: 1px solid #3182ce; }
+        .input-busca { padding: 6px; border: 1px solid #cbd5e0; border-radius: 4px; width: 180px; font-size: 11px; }
+        .btn-busca-nav { padding: 4px 8px; cursor: pointer; background: #3182ce; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 10px; }
+        .btn-limpar-busca { background: #e53e3e !important; }
+        #cont-busca { font-size: 10px; font-weight: bold; color: #2b6cb0; min-width: 35px; text-align: center; }
+
         .btn-nav { padding: 8px 12px; cursor: pointer; background: white; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold; font-size: 11px; }
         .btn-lista { background: #2d3748; color: white; border: none; }
 
@@ -52,6 +59,10 @@
         .reserva-p { background-color: var(--cor-p); font-weight: bold; cursor: pointer; }
         .reserva-d { background-color: var(--cor-d); font-weight: bold; cursor: pointer; }
         .reserva-vinho { background-color: var(--cor-vinho) !important; border: none !important; color: transparent !important; cursor: pointer; } 
+        
+        /* Efeito visual da busca */
+        .highlight-search { border: 3px solid red !important; animation: pulse 1.2s infinite; position: relative; z-index: 10; box-shadow: 0 0 15px rgba(255,0,0,0.5); }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); background-color: #ffcccb; } 100% { transform: scale(1); } }
 
         /* MODAIS */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 99999; justify-content: center; align-items: center; }
@@ -147,6 +158,16 @@
             <button class="btn-nav" onclick="imprimirMapa4Meses()">🖨️ Mapa</button>
             <button class="btn-nav" onclick="abrirModalEscolhaFaxina()">🧹 Faxina</button>
         </div>
+
+        <!-- BUSCA GLOBAL RESTAURADA COM BOTÃO LIMPAR -->
+        <div class="container-busca">
+            <input type="text" class="input-busca" id="busca-hospede" placeholder="🔍 Localizar hóspede..." oninput="iniciarBuscaGlobal()">
+            <button class="btn-busca-nav btn-limpar-busca" title="Limpar busca" onclick="limparBusca()">X</button>
+            <button class="btn-busca-nav" onclick="navegarBusca(-1)">◀</button>
+            <span id="cont-busca">0/0</span>
+            <button class="btn-busca-nav" onclick="navegarBusca(1)">▶</button>
+        </div>
+
         <div class="controles-direita">
             <button class="btn-nav" onclick="mudarMes(-1)">◀ ANTERIOR</button>
             <button class="btn-nav" onclick="irParaHoje()">HOJE</button>
@@ -175,8 +196,6 @@
     </div>
 </div>
 
-<div id="modalErro" class="modal-overlay"><div class="modal-box" style="max-width:300px;"><h3 style="color:#e53e3e">Aviso</h3><p id="msgErro"></p><button class="btn-nav" onclick="fecharModais()">OK</button></div></div>
-
 <script>
     const SB_URL = "https://eqoayyftpddombylgxpw.supabase.co";
     const SB_KEY = "sb_publishable_52ePL6AdYLm58359gM4VJg_x5bfdamZ";
@@ -186,16 +205,18 @@
     let mesBase = new Date(); mesBase.setDate(1);
     let aptosGlobais = [];
     let reservasGlobais = [];
+    let resultadosBusca = [];
+    let indiceBusca = -1;
     const diasSemanaNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
     function fmt(d) { if(!d) return ""; return d.toString().split('T')[0].split(' ')[0].trim(); }
     function fecharModais() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
 
-    // LOGIN LOGIC
     window.onload = () => {
         if (!userLogado) document.getElementById('tela-login').style.display = 'flex';
         else { document.getElementById('nome-logado').innerText = userLogado.usuario; init(); }
     };
+
     async function realizarLogin() {
         const u = document.getElementById('login_user').value.trim();
         const s = document.getElementById('login_pass').value.trim();
@@ -216,7 +237,7 @@
     async function renderizarMapaTriplo() {
         const { data: reservas } = await supabaseClient.from('reservas').select('*');
         reservasGlobais = reservas || [];
-        sugerirAyrton(); // Sugere o número assim que carrega
+        sugerirAyrton();
         const area = document.getElementById('area-mapas');
         area.innerHTML = "";
         const ativas = reservasGlobais.filter(r => !r.cancelada);
@@ -224,12 +245,76 @@
             const dataFoco = new Date(mesBase.getFullYear(), mesBase.getMonth() + i, 1);
             area.appendChild(criarTabelaMes(dataFoco, ativas));
         }
+        if(indiceBusca >= 0) aplicarDestaqueBusca();
+    }
+
+    // LÓGICA DE BUSCA GLOBAL RESTAURADA
+    function iniciarBuscaGlobal() {
+        const busca = document.getElementById('busca-hospede').value.toLowerCase().trim();
+        if(busca.length < 2) {
+            resultadosBusca = [];
+            indiceBusca = -1;
+            document.getElementById('cont-busca').innerText = "0/0";
+            limparDestaques();
+            return;
+        }
+        resultadosBusca = reservasGlobais
+            .filter(r => !r.cancelada && r.guest_principal.toLowerCase().includes(busca))
+            .sort((a,b) => new Date(b.data_checkin) - new Date(a.data_checkin));
+
+        if(resultadosBusca.length > 0) {
+            indiceBusca = 0;
+            irParaResultadoBusca();
+        } else {
+            indiceBusca = -1;
+            document.getElementById('cont-busca').innerText = "0/0";
+            limparDestaques();
+        }
+    }
+
+    function limparBusca() {
+        document.getElementById('busca-hospede').value = '';
+        resultadosBusca = [];
+        indiceBusca = -1;
+        document.getElementById('cont-busca').innerText = "0/0";
+        limparDestaques();
+        renderizarMapaTriplo();
+    }
+
+    function navegarBusca(dir) {
+        if(resultadosBusca.length === 0) return;
+        indiceBusca += dir;
+        if(indiceBusca >= resultadosBusca.length) indiceBusca = 0;
+        if(indiceBusca < 0) indiceBusca = resultadosBusca.length - 1;
+        irParaResultadoBusca();
+    }
+
+    function irParaResultadoBusca() {
+        const res = resultadosBusca[indiceBusca];
+        document.getElementById('cont-busca').innerText = `${indiceBusca + 1} / ${resultadosBusca.length}`;
+        const dataRes = new Date(res.data_checkin + "T12:00:00");
+        mesBase = new Date(dataRes.getFullYear(), dataRes.getMonth(), 1);
+        renderizarMapaTriplo().then(() => { aplicarDestaqueBusca(); });
+    }
+
+    function aplicarDestaqueBusca() {
+        limparDestaques();
+        if(indiceBusca < 0) return;
+        const res = resultadosBusca[indiceBusca];
+        const celula = document.getElementById(`cell-${res.id}`);
+        if(celula) {
+            celula.classList.add('highlight-search');
+            celula.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    function limparDestaques() {
+        document.querySelectorAll('.highlight-search').forEach(el => el.classList.remove('highlight-search'));
     }
 
     function sugerirAyrton() {
         const idVal = document.getElementById('edit_id').value;
         const ayrtonField = document.getElementById('ayrton_reserva_id');
-        // Só sugere se não estiver editando e o campo estiver vazio
         if (!idVal && (!ayrtonField.value || ayrtonField.value === "")) {
             const numeros = reservasGlobais.map(r => parseInt(r.ayrton_reserva_id)).filter(n => !isNaN(n));
             const proximo = numeros.length > 0 ? Math.max(...numeros) + 1 : 1;
@@ -259,20 +344,27 @@
                 const entrandoH = reservas.find(r => r.apto_id === apto.id && fmt(r.data_checkin) === dIso);
                 
                 if (saindoH && entrandoH) {
-                    html += `<td class="reserva-vinho" onclick="prepararEdicao('${entrandoH.id}')"></td>`;
+                    html += `<td class="reserva-vinho" id="cell-v-${entrandoH.id}" onclick="prepararEdicao('${entrandoH.id}')"></td>`;
                 } else {
                     const resA = reservas.find(r => r.apto_id === apto.id && dIso >= fmt(r.data_checkin) && dIso <= fmt(r.data_checkout));
                     if (resA && (dIso === fmt(resA.data_checkin) || d === 1 || (saindoH === undefined && dIso > fmt(resA.data_checkin)))) {
-                        let dur = 0; let tempD = d;
-                        while(tempD <= ultimoDia) {
-                            const dL = new Date(ano, mes, tempD).toISOString().split('T')[0];
-                            if (dL > fmt(resA.data_checkout)) break;
-                            if (reservas.some(r => r.apto_id === apto.id && fmt(r.data_checkout) === dL && reservas.some(r2 => r2.apto_id === apto.id && fmt(r2.data_checkin) === dL)) && tempD > d) break;
-                            dur++; tempD++;
-                        }
-                        const cod = {'Booking':'B','AirBnb':'A','VRBO':'V','D':'D','P':'P'}[resA.origem] || "R";
-                        html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal}</td>`;
-                        d += (dur - 1);
+                        let ok = false;
+                        if (dIso === fmt(resA.data_checkin)) ok = true;
+                        else if (d === 1) ok = true;
+                        else if (saindoH === undefined && dIso > fmt(resA.data_checkin)) ok = true;
+
+                        if (ok) {
+                            let dur = 0; let tempD = d;
+                            while(tempD <= ultimoDia) {
+                                const dL = new Date(ano, mes, tempD).toISOString().split('T')[0];
+                                if (dL > fmt(resA.data_checkout)) break;
+                                if (reservas.some(r => r.apto_id === apto.id && fmt(r.data_checkout) === dL && reservas.some(r2 => r2.apto_id === apto.id && fmt(r2.data_checkin) === dL)) && tempD > d) break;
+                                dur++; tempD++;
+                            }
+                            const cod = {'Booking':'B','AirBnb':'A','VRBO':'V','D':'D','P':'P'}[resA.origem] || "R";
+                            html += `<td colspan="${dur}" id="cell-${resA.id}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal}</td>`;
+                            d += (dur - 1);
+                        } else html += `<td></td>`;
                     } else html += `<td></td>`;
                 }
             }
@@ -333,7 +425,7 @@
         document.getElementById('cancelada').checked = false;
         document.getElementById('num_adultos').value = 3;
         document.getElementById('btn-excluir').style.display = "none";
-        sugerirAyrton(); // Coloca o próximo número imediatamente
+        sugerirAyrton();
     }
 
     async function salvarFinal() {
@@ -378,7 +470,7 @@
     function irParaHoje() { mesBase = new Date(); mesBase.setDate(1); renderizarMapaTriplo(); }
     function confirmarExclusao() { if(confirm("Excluir?")) excluirDeVez(); }
     async function excluirDeVez() { await supabaseClient.from('reservas').delete().eq('id', document.getElementById('edit_id').value); location.reload(); }
-    function abrirModalEscolhaFaxina() { alert("Faxina carregada"); }
+    function abrirModalEscolhaFaxina() { alert("Relatório de Faxina"); }
     function imprimirMapa4Meses() { window.print(); }
 
     init();
