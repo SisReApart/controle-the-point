@@ -11,11 +11,11 @@
         
         /* LOGIN */
         #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background:#2d3748; z-index:9999; display:none; justify-content:center; align-items:center; }
-        .login-box { background:white; padding:30px; border-radius:8px; width:300px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); }
+        .login-box { background:white; padding:30px; border-radius:8px; width:300px; text-align:center; }
         .login-box input { width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:4px; box-sizing:border-box; }
         .btn-login { width:100%; padding:10px; background:#38a169; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; }
 
-        /* SIDEBAR AJUSTADA */
+        /* SIDEBAR */
         .sidebar { width: 315px; background: white; padding: 12px; border-right: 1px solid #ddd; overflow-y: auto; flex-shrink: 0; }
         .sidebar h2 { font-size: 0.9rem; margin-top: 0; color: #2c3e50; border-bottom: 2px solid #38a169; padding-bottom: 5px; margin-bottom: 10px; }
         .campo { margin-bottom: 8px; }
@@ -23,10 +23,8 @@
         .col-70 { flex: 0 0 68%; }
         .col-30 { flex: 1; }
         .col-50 { flex: 1; }
-
         label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 2px; color: #666; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; font-size: 12px; }
-        
         .btn-salvar { width: 100%; padding: 10px; background: #38a169; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px; }
         .btn-excluir { width: 100%; padding: 8px; background: #e53e3e; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 11px; display: none; }
         .btn-limpar { width: 100%; padding: 6px; background: #718096; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 5px; font-size: 10px; display: block; width: 100%; }
@@ -41,13 +39,12 @@
         .input-busca { padding: 6px; border: 1px solid #cbd5e0; border-radius: 4px; width: 180px; font-size: 11px; }
         .btn-busca-nav { padding: 4px 8px; cursor: pointer; background: #3182ce; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 10px; }
         .btn-limpar-busca { background: #e53e3e !important; }
-        #cont-busca { font-size: 10px; font-weight: bold; color: #2b6cb0; min-width: 35px; text-align: center; }
 
         .btn-nav { padding: 8px 12px; cursor: pointer; background: white; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold; font-size: 11px; }
         .btn-lista { background: #2d3748; color: white; border: none; }
         .btn-baixa { background: #d69e2e; color: white; border: none; font-weight: bold; }
 
-        /* MAPA */
+        /* MAPA TELA */
         .mes-container { margin-bottom: 15px; background: white; border-radius: 6px; padding: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); }
         .titulo-mes-tabela { font-weight: bold; color: #2d3748; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; }
         table { border-collapse: collapse; width: 100%; table-layout: fixed; }
@@ -55,39 +52,39 @@
         .col-apto { width: 130px; text-align: left; padding-left: 8px; background: #f8f9fa; font-weight: bold; }
         .cabecalho-dias { background: #2d3748; color: white; height: 18px; }
         .cabecalho-semana { background: #f1f5f9; color: #4a5568; height: 16px; font-size: 8px; font-weight: bold; }
-        
         .reserva-p { background-color: var(--cor-p); font-weight: bold; cursor: pointer; }
         .reserva-d { background-color: var(--cor-d); font-weight: bold; cursor: pointer; }
-        .reserva-vinho { background-color: var(--cor-vinho) !important; border: none !important; color: transparent !important; cursor: pointer; } 
-        .highlight-search { border: 3px solid red !important; animation: pulse 1.2s infinite; position: relative; z-index: 10; box-shadow: 0 0 15px rgba(255,0,0,0.5); }
+        .reserva-vinho { background-color: var(--cor-vinho) !important; color: transparent !important; }
+        .highlight-search { border: 3px solid red !important; animation: pulse 1.2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { background-color: #ffcccb; } 100% { transform: scale(1); } }
 
         /* MODAIS */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 99999; justify-content: center; align-items: center; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; }
         .modal-box { background: white; padding: 20px; border-radius: 10px; width: 95%; max-width: 1200px; max-height: 90vh; overflow-y: auto; }
         .tab-padrao { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .tab-padrao th { background: #2d3748; color: white; padding: 8px; }
+        .tab-padrao th { background: #2d3748; color: white; padding: 8px; position: sticky; top: 0; }
         .tab-padrao td { border: 1px solid #ddd; padding: 6px; text-align: center; }
         .tab-padrao tr:hover { background: #f0f7ff; cursor: pointer; }
 
-        /* REGRAS DE IMPRESSÃO */
+        /* IMPRESSÃO */
         #area-impressao { display: none; }
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            @page { size: letter landscape; margin: 0.3in; }
             body * { visibility: hidden; }
             #area-impressao, #area-impressao * { visibility: visible; }
             #area-impressao { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
-            .sidebar, .topo-controles, .modal-overlay, #tela-login { display: none !important; }
-
-            /* Mapa Paisagem */
-            .print-landscape { page-break-after: always; width: 100%; }
+            .print-landscape { page-break-after: always; width: 100%; display: block; }
             .mes-print { margin-bottom: 5px !important; border: 1px solid #000 !important; }
             .mes-print table td { height: 22px !important; font-size: 9px !important; line-height: 22px !important; }
-
-            /* Faxina Retrato */
-            .faxina-folha { padding: 0.5in; font-family: Arial, sans-serif; visibility: visible; }
-            .faxina-tabela { width: 100%; border: 1px solid black; border-collapse: collapse; visibility: visible; }
-            .faxina-tabela th { background: #999 !important; padding: 8px; font-size: 16px; border: 1px solid black; }
-            .faxina-tabela td { padding: 6px; font-size: 14px; border: 1px solid black; }
+            .sidebar, .topo-controles, .modal-overlay, #tela-login { display: none !important; }
+            
+            /* Ajuste para Faxina Retrato */
+            .faxina-print-mode { @page { size: letter portrait; } }
+            .faxina-folha { padding: 0.5in; }
+            .faxina-tabela { width: 100%; border-collapse: collapse; border: 1px solid black; }
+            .faxina-tabela th { background: #999 !important; border: 1px solid black; font-size: 16px; }
+            .faxina-tabela td { border: 1px solid black; font-size: 14px; }
         }
     </style>
 </head>
@@ -183,25 +180,43 @@
     <div id="area-mapas"></div>
 </div>
 
-<div id="area-impressao"></div>
-
 <!-- MODAL HISTÓRICO -->
 <div id="modalHistorico" class="modal-overlay">
     <div class="modal-box">
-        <div class="header-hist">
-            <div class="filtros-hist">
-                <button id="f-ativas" class="active" onclick="setHistFilter('ativas')">Só as Ativas</button>
-                <button id="f-canceladas" onclick="setHistFilter('canceladas')">Só as Canceladas</button>
-                <button id="f-todas" onclick="setHistFilter('todas')">Todas</button>
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom:15px; border-bottom:2px solid #2d3748; padding-bottom:10px;">
+            <div style="display:flex; gap:10px;">
+                <button class="btn-nav active" id="btn-f-ativas" onclick="setHistFilter('ativas')">Ativas</button>
+                <button class="btn-nav" id="btn-f-canceladas" onclick="setHistFilter('canceladas')">Canceladas</button>
+                <button class="btn-nav" id="btn-f-todas" onclick="setHistFilter('todas')">Todas</button>
             </div>
-            <h3 style="margin:0;">Histórico de Reservas</h3>
-            <button class="btn-nav" style="background:#e53e3e; color:white; border:none;" onclick="fecharModais()">FECHAR</button>
+            <div class="container-busca">
+                <input type="text" class="input-busca" id="busca-hist" placeholder="🔍 Pesquisar nesta lista..." oninput="renderHistorico()">
+            </div>
+            <button class="btn-nav" style="background:#e53e3e; color:white;" onclick="fecharModais()">FECHAR</button>
         </div>
         <table class="tab-padrao">
             <thead><tr><th>Check-in</th><th>Check-out</th><th>Hóspede</th><th>Apto</th><th>Dias</th><th>#Ayrton</th><th>Valor</th><th>Data Crédito</th><th>Status</th></tr></thead>
             <tbody id="corpo-historico"></tbody>
         </table>
         <div id="paginacao-hist" class="paginacao"></div>
+    </div>
+</div>
+
+<!-- MODAL BAIXA BOOKING -->
+<div id="modalBaixaBooking" class="modal-overlay">
+    <div class="modal-box">
+        <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #d69e2e; padding-bottom:10px; margin-bottom:15px;">
+            <h2 style="margin:0; color:#d69e2e;">Conciliação Booking (Pendentes)</h2>
+            <div class="container-busca">
+                <input type="number" step="0.01" class="input-busca" id="busca-valor-booking" placeholder="🔍 Pesquisar Valor (R$)..." oninput="renderizarBaixaBooking()">
+                <button class="btn-busca-nav btn-limpar-busca" onclick="limparBuscaBooking()">X</button>
+            </div>
+            <button class="btn-nav" onclick="fecharModais()">Fechar</button>
+        </div>
+        <table class="tab-padrao">
+            <thead><tr><th>Check-in</th><th>Check-out</th><th>Hóspede</th><th>Apto</th><th>#Ayrton</th><th>Valor (R$)</th><th>Data do Crédito</th><th>Ação</th></tr></thead>
+            <tbody id="corpo-baixa-booking"></tbody>
+        </table>
     </div>
 </div>
 
@@ -216,6 +231,8 @@
     </div>
 </div>
 
+<div id="area-impressao"></div>
+
 <script>
     const SB_URL = "https://eqoayyftpddombylgxpw.supabase.co";
     const SB_KEY = "sb_publishable_52ePL6AdYLm58359gM4VJg_x5bfdamZ";
@@ -226,6 +243,7 @@
     let aptosGlobais = [];
     let reservasGlobais = [];
     let histFilter = 'ativas'; let histPage = 1; const histItemsPerPage = 20;
+    let resultadosBusca = []; let indiceBusca = -1;
     const diasSemanaNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
     function fmt(d) { if(!d) return ""; return d.toString().split('T')[0].split(' ')[0].trim(); }
@@ -272,6 +290,7 @@
             const dataFoco = new Date(mesBase.getFullYear(), mesBase.getMonth() + i, 1);
             area.appendChild(criarTabelaMes(dataFoco, ativas));
         }
+        if(indiceBusca >= 0) aplicarDestaqueBusca();
     }
 
     function criarTabelaMes(dataRef, reservas) {
@@ -321,112 +340,102 @@
         html += `</tbody></table>`; container.innerHTML += html; return container;
     }
 
-    // --- IMPRESSÃO MAPA (4 MESES POR PÁGINA) ---
+    // --- IMPRESSÃO MAPA (4 MESES / PAISAGEM) ---
     function imprimirMapa4Meses() {
-        const area = document.getElementById('area-impressao');
-        area.innerHTML = "";
-        const style = document.createElement('style');
-        style.innerHTML = "@page { size: letter landscape; margin: 0.3in; }";
-        document.head.appendChild(style);
-
+        const area = document.getElementById('area-impressao'); area.innerHTML = "";
         let dataInicio = new Date(mesBase);
         let dataUltima = new Date();
         reservasGlobais.forEach(r => { if(new Date(r.data_checkout) > dataUltima) dataUltima = new Date(r.data_checkout); });
-        
         let totalMeses = (dataUltima.getFullYear() - dataInicio.getFullYear()) * 12 + (dataUltima.getMonth() - dataInicio.getMonth()) + 1;
         if(totalMeses < 4) totalMeses = 4;
-
         const ativas = reservasGlobais.filter(r => !r.cancelada);
-
         for (let i = 0; i < totalMeses; i += 4) {
-            const folha = document.createElement('div');
-            folha.className = 'print-landscape';
+            const folha = document.createElement('div'); folha.className = 'print-landscape';
             for (let j = 0; j < 4; j++) {
                 if (i + j < totalMeses) {
                     const df = new Date(dataInicio.getFullYear(), dataInicio.getMonth() + i + j, 1);
                     const mesB = criarTabelaMes(df, ativas);
-                    mesB.classList.add('mes-print');
-                    folha.appendChild(mesB);
+                    mesB.classList.add('mes-print'); folha.appendChild(mesB);
                 }
             }
             area.appendChild(folha);
         }
         window.print();
-        style.remove();
     }
+
+    // --- BAIXA BOOKING ---
+    function abrirBaixaBooking() { document.getElementById('modalBaixaBooking').style.display = 'flex'; renderizarBaixaBooking(); }
+    function renderizarBaixaBooking() {
+        const buscaV = parseFloat(document.getElementById('busca-valor-booking').value) || null;
+        let lista = reservasGlobais.filter(r => r.origem === 'Booking' && !r.cancelada && !r.data_credito);
+        if(buscaV) lista = lista.filter(r => parseFloat(r.valor_creditado) === buscaV);
+        const corpo = document.getElementById('corpo-baixa-booking'); corpo.innerHTML = "";
+        lista.sort((a,b) => new Date(a.data_checkin) - new Date(b.data_checkin));
+        lista.forEach(r => {
+            const apto = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "-";
+            corpo.innerHTML += `<tr><td>${fmt(r.data_checkin)}</td><td>${fmt(r.data_checkout)}</td><td>${r.guest_principal}</td><td>${apto}</td><td>${r.ayrton_reserva_id || ""}</td><td>$${r.valor_creditado}</td><td><input type="date" id="b-dt-${r.id}"></td><td><button onclick="salvarBaixaRapida('${r.id}')">SALVAR</button></td></tr>`;
+        });
+    }
+    async function salvarBaixaRapida(id) {
+        const d = document.getElementById(`b-dt-${id}`).value; if(!d) return;
+        await supabaseClient.from('reservas').update({ data_credito: d }).eq('id', id);
+        location.reload();
+    }
+    function limparBuscaBooking() { document.getElementById('busca-valor-booking').value = ""; renderizarBaixaBooking(); }
+
+    // --- HISTÓRICO ---
+    function setHistFilter(f) { histFilter = f; histPage = 1; renderHistorico(); }
+    function renderHistorico() {
+        document.querySelectorAll('.filtros-hist button').forEach(b => b.classList.remove('active'));
+        const termo = document.getElementById('busca-hist').value.toLowerCase();
+        let filtrados = reservasGlobais.filter(r => {
+            if(histFilter === 'ativas') return !r.cancelada;
+            if(histFilter === 'canceladas') return r.cancelada;
+            return true;
+        }).filter(r => r.guest_principal.toLowerCase().includes(termo));
+        filtrados.sort((a,b) => new Date(b.data_checkin) - new Date(a.data_checkin));
+        const dataPag = filtrados.slice((histPage - 1) * histItemsPerPage, histPage * histItemsPerPage);
+        const corpo = document.getElementById('corpo-historico'); corpo.innerHTML = "";
+        dataPag.forEach(r => {
+            const apto = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "-";
+            corpo.innerHTML += `<tr onclick="prepararEdicao('${r.id}'); fecharModais();"><td>${fmt(r.data_checkin)}</td><td>${fmt(r.data_checkout)}</td><td>${r.guest_principal}</td><td>${apto}</td><td>${r.noites}</td><td>${r.ayrton_reserva_id || ""}</td><td>$${r.valor_creditado}</td><td>${fmt(r.data_credito)}</td><td>${r.cancelada ? 'Cancelada' : 'Ativa'}</td></tr>`;
+        });
+        const pag = document.getElementById('paginacao-hist'); pag.innerHTML = "";
+        for(let i=1; i<=Math.ceil(filtrados.length/histItemsPerPage); i++) pag.innerHTML += `<button class="${i===histPage?'active':''}" onclick="histPage=${i};renderHistorico()">${i}</button>`;
+    }
+    function abrirHistorico() { document.getElementById('modalHistorico').style.display='flex'; renderHistorico(); }
 
     // --- FAXINA ---
     function abrirModalEscolhaFaxina() { document.getElementById('modalFaxina').style.display = 'flex'; }
     function gerarRelatorioFaxinaFinal() {
-        const mesSel = parseInt(document.getElementById('sel_mes_faxina').value);
-        const anoSel = parseInt(document.getElementById('sel_ano_faxina').value);
+        const mes = parseInt(document.getElementById('sel_mes_faxina').value);
+        const ano = parseInt(document.getElementById('sel_ano_faxina').value);
         const area = document.getElementById('area-impressao'); area.innerHTML = "";
-        const style = document.createElement('style');
-        style.innerHTML = "@page { size: letter portrait; margin: 0.5in; }";
-        document.head.appendChild(style);
-
-        const dataRef = new Date(anoSel, mesSel, 1);
-        const mesNome = dataRef.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-        let faxinas = [];
-        reservasGlobais.forEach(r => {
-            const dOut = new Date(r.data_checkout + "T12:00:00");
-            if (!r.cancelada && dOut.getMonth() === mesSel && dOut.getFullYear() === anoSel) {
-                const apto = aptosGlobais.find(a => a.id === r.apto_id);
-                faxinas.push({ data: r.data_checkout, hospede: r.guest_principal, apto: apto ? apto.nome_apto : "N/A", valor: apto ? (apto.preco_faxina || 0) : 0 });
-            }
-        });
-        faxinas.sort((a,b) => new Date(a.data) - new Date(b.data));
-
+        let faxinas = reservasGlobais.filter(r => {
+            const d = new Date(r.data_checkout + "T12:00:00");
+            return !r.cancelada && d.getMonth() === mes && d.getFullYear() === ano;
+        }).sort((a,b) => new Date(a.data_checkout) - new Date(b.data_checkout));
         const folha = document.createElement('div'); folha.className = 'faxina-folha';
-        let html = `<h2 style="text-align:center; text-transform:uppercase;">Relatório de Faxinas - ${mesNome}</h2><table class="faxina-tabela"><thead><tr><th>Item</th><th>Hóspede</th><th>Data</th><th>Apartamento</th><th>Valor</th></tr></thead><tbody>`;
+        let html = `<h2>Relatório de Faxinas</h2><table class="faxina-tabela"><thead><tr><th>Item</th><th>Hóspede</th><th>Data</th><th>Apto</th><th>Valor</th></tr></thead><tbody>`;
         let total = 0;
         faxinas.forEach((f, idx) => {
-            html += `<tr><td style="text-align:center">${idx+1}</td><td>${f.hospede}</td><td style="text-align:center">${f.data.split('-').reverse().join('/')}</td><td>${f.apto}</td><td style="text-align:right">$${f.valor.toFixed(2)}</td></tr>`;
-            total += f.valor;
+            const v = aptosGlobais.find(a => a.id === f.apto_id)?.preco_faxina || 0;
+            html += `<tr><td>${idx+1}</td><td>${f.guest_principal}</td><td>${fmt(f.data_checkout)}</td><td>${aptosGlobais.find(a=>a.id===f.apto_id).nome_apto}</td><td>$${v.toFixed(2)}</td></tr>`;
+            total += v;
         });
-        html += `<tr style="font-weight:bold; background:#999"><td colspan="4" style="text-align:right;">TOTAL GERAL A PAGAR: ➔</td><td style="text-align:center">$${total.toFixed(2)}</td></tr></tbody></table>`;
-        folha.innerHTML = html; area.appendChild(folha);
-        fecharModais(); window.print(); style.remove();
+        html += `<tr style="background:#999; font-weight:bold"><td colspan="4">TOTAL GERAL:</td><td>$${total.toFixed(2)}</td></tr></tbody></table>`;
+        folha.innerHTML = html; area.appendChild(folha); window.print();
     }
 
-    // --- HISTÓRICO ---
-    function setHistFilter(f) { histFilter = f; histPage = 1; renderHistorico(); }
-    function abrirHistorico() { histPage = 1; histFilter = 'ativas'; renderHistorico(); document.getElementById('modalHistorico').style.display = 'flex'; }
-    function renderHistorico() {
-        document.querySelectorAll('.filtros-hist button').forEach(b => b.classList.remove('active'));
-        document.getElementById(`f-${histFilter}`).classList.add('active');
-        let filtrados = [...reservasGlobais];
-        if (histFilter === 'ativas') filtrados = filtrados.filter(r => !r.cancelada);
-        if (histFilter === 'canceladas') filtrados = filtrados.filter(r => r.cancelada);
-        filtrados.sort((a,b) => new Date(b.data_checkin) - new Date(a.data_checkin));
-        const dataPaginated = filtrados.slice((histPage - 1) * histItemsPerPage, histPage * histItemsPerPage);
-        const corpo = document.getElementById('corpo-historico'); corpo.innerHTML = "";
-        dataPaginated.forEach(r => {
-            const aptoNome = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "-";
-            corpo.innerHTML += `<tr onclick="prepararEdicao('${r.id}'); fecharModais();"><td>${fmt(r.data_checkin).split('-').reverse().join('/')}</td><td>${fmt(r.data_checkout).split('-').reverse().join('/')}</td><td style="text-align:left">${r.guest_principal}</td><td>${aptoNome}</td><td>${r.noites}</td><td>${r.ayrton_reserva_id || ""}</td><td>$${parseFloat(r.valor_creditado || 0).toFixed(2)}</td><td>${r.data_credito ? fmt(r.data_credito).split('-').reverse().join('/') : ""}</td><td>${r.cancelada ? 'Red' : 'Green'}</td></tr>`;
-        });
-        const pagDiv = document.getElementById('paginacao-hist'); pagDiv.innerHTML = "";
-        for (let i = 1; i <= Math.ceil(filtrados.length / histItemsPerPage); i++) {
-            pagDiv.innerHTML += `<button class="${i === histPage ? 'active' : ''}" onclick="histPage=${i}; renderHistorico()">${i}</button>`;
-        }
-    }
-
-    // --- FUNÇÕES GERAIS ---
+    // --- GERAL ---
     function sugerirAyrton() {
         const ayrtonField = document.getElementById('ayrton_reserva_id');
-        if (!document.getElementById('edit_id').value && (!ayrtonField.value || ayrtonField.value === "")) {
+        if (!document.getElementById('edit_id').value && !ayrtonField.value) {
             const numeros = reservasGlobais.map(r => parseInt(r.ayrton_reserva_id)).filter(n => !isNaN(n));
             ayrtonField.value = numeros.length > 0 ? Math.max(...numeros) + 1 : 1;
         }
     }
-    function resetarFormulario() {
-        document.getElementById('edit_id').value = "";
-        document.querySelectorAll('.sidebar input:not([type=checkbox]), .sidebar textarea').forEach(i => i.value = "");
-        document.getElementById('cancelada').checked = false;
-        document.getElementById('num_adultos').value = 3;
-        document.getElementById('btn-excluir').style.display = "none";
-        sugerirAyrton();
-    }
+    function resetarFormulario() { location.reload(); }
     async function salvarFinal() {
         const id = document.getElementById('edit_id').value;
         const r = {
@@ -436,7 +445,6 @@
             num_adultos: document.getElementById('num_adultos').value,
             data_checkin: document.getElementById('data_checkin').value,
             data_checkout: document.getElementById('data_checkout').value,
-            noites: document.getElementById('noites').value,
             origem: document.getElementById('origem').value,
             invoice_id: document.getElementById('invoice_id').value,
             ayrton_reserva_id: document.getElementById('ayrton_reserva_id').value,
@@ -444,7 +452,8 @@
             data_credito: document.getElementById('data_credito').value || null,
             valor_comissao: document.getElementById('valor_comissao').value || 0,
             data_comissao: document.getElementById('data_comissao').value || null,
-            observacoes: document.getElementById('observacoes').value
+            observacoes: document.getElementById('observacoes').value,
+            noites: document.getElementById('noites').value
         };
         if(id) await supabaseClient.from('reservas').update(r).eq('id', id);
         else await supabaseClient.from('reservas').insert([r]);
@@ -453,16 +462,13 @@
     function prepararEdicao(id) {
         const r = reservasGlobais.find(res => res.id === id); if (!r) return;
         document.getElementById('edit_id').value = r.id;
-        document.getElementById('cancelada').checked = r.cancelada || false;
+        document.getElementById('cancelada').checked = r.cancelada;
         document.getElementById('apto_id').value = r.apto_id;
         document.getElementById('guest_principal').value = r.guest_principal;
         document.getElementById('data_checkin').value = fmt(r.data_checkin);
         document.getElementById('data_checkout').value = fmt(r.data_checkout);
-        document.getElementById('noites').value = r.noites;
         document.getElementById('origem').value = r.origem;
-        document.getElementById('ayrton_reserva_id').value = r.ayrton_reserva_id || "";
         document.getElementById('valor_creditado').value = r.valor_creditado;
-        document.getElementById('data_credito').value = r.data_credito || "";
         document.getElementById('btn-excluir').style.display = "block";
     }
     function verificarReserva() {
@@ -479,6 +485,23 @@
     function logout() { sessionStorage.clear(); location.reload(); }
     function confirmarExclusao() { if(confirm("Excluir?")) excluirDeVez(); }
     async function excluirDeVez() { await supabaseClient.from('reservas').delete().eq('id', document.getElementById('edit_id').value); location.reload(); }
+    function iniciarBuscaGlobal() {
+        const busca = document.getElementById('busca-hospede').value.toLowerCase().trim();
+        if(busca.length < 2) { resultadosBusca = []; indiceBusca = -1; document.getElementById('cont-busca').innerText = "0/0"; return; }
+        resultadosBusca = reservasGlobais.filter(r => !r.cancelada && r.guest_principal.toLowerCase().includes(busca)).sort((a,b) => new Date(a.data_checkin) - new Date(a.data_checkin));
+        if(resultadosBusca.length > 0) { indiceBusca = 0; irParaResultadoBusca(); }
+    }
+    function limparBusca() { document.getElementById('busca-hospede').value = ''; renderizarMapaTriplo(); }
+    function navegarBusca(dir) { indiceBusca += dir; if(indiceBusca >= resultadosBusca.length) indiceBusca = 0; irParaResultadoBusca(); }
+    function irParaResultadoBusca() {
+        const res = resultadosBusca[indiceBusca]; document.getElementById('cont-busca').innerText = `${indiceBusca + 1}/${resultadosBusca.length}`;
+        const dr = new Date(res.data_checkin + "T12:00:00"); mesBase = new Date(dr.getFullYear(), dr.getMonth(), 1);
+        renderizarMapaTriplo().then(() => { 
+            document.querySelectorAll('.highlight-search').forEach(e=>e.classList.remove('highlight-search'));
+            const el = document.getElementById(`cell-${res.id}`); if(el) el.classList.add('highlight-search');
+        });
+    }
+
     init();
 </script>
 </body>
