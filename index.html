@@ -15,7 +15,7 @@
         .login-box input { width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:4px; box-sizing:border-box; }
         .btn-login { width:100%; padding:10px; background:#38a169; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; }
 
-        /* SIDEBAR AJUSTADA (Campos Lado a Lado) */
+        /* SIDEBAR (Mantendo layout 70/30 e 50/50 solicitado anteriormente) */
         .sidebar { width: 310px; background: white; padding: 12px; border-right: 1px solid #ddd; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.05); flex-shrink: 0; }
         .sidebar h2 { font-size: 0.9rem; margin-top: 0; color: #2c3e50; border-bottom: 2px solid #38a169; padding-bottom: 5px; margin-bottom: 10px; }
         .campo { margin-bottom: 8px; }
@@ -34,18 +34,17 @@
         /* CONTEÚDO PRINCIPAL */
         .main-content { flex: 1; padding: 5px 10px; overflow-y: auto; display: flex; flex-direction: column; background: #edf2f7; }
         .topo-controles { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: sticky; top: 0; z-index: 100; background: #edf2f7; padding: 10px 5px; gap: 10px; }
-        
         .controles-esquerda, .controles-direita { display: flex; gap: 8px; align-items: center; }
 
-        /* BUSCA AVANÇADA (RESTAURADA E MELHORADA) */
+        /* BUSCA GLOBAL */
         .container-busca { display: flex; align-items: center; gap: 5px; background: #ebf8ff; padding: 5px; border-radius: 6px; border: 1px solid #3182ce; }
         .input-busca { padding: 6px; border: 1px solid #cbd5e0; border-radius: 4px; width: 180px; font-size: 11px; }
         .btn-busca-nav { padding: 4px 8px; cursor: pointer; background: #3182ce; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 10px; }
         .btn-limpar-busca { background: #e53e3e !important; }
-        #cont-busca { font-size: 10px; font-weight: bold; color: #2b6cb0; min-width: 35px; text-align: center; }
 
         .btn-nav { padding: 8px 12px; cursor: pointer; background: white; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold; font-size: 11px; }
         .btn-lista { background: #2d3748; color: white; border: none; }
+        .btn-baixa { background: #d69e2e; color: white; border: none; font-weight: bold; }
 
         /* MAPA */
         .mes-container { margin-bottom: 15px; background: white; border-radius: 6px; padding: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.05); }
@@ -59,18 +58,14 @@
         .reserva-p { background-color: var(--cor-p); font-weight: bold; cursor: pointer; }
         .reserva-d { background-color: var(--cor-d); font-weight: bold; cursor: pointer; }
         .reserva-vinho { background-color: var(--cor-vinho) !important; border: none !important; color: transparent !important; cursor: pointer; } 
-        
-        /* Efeito visual da busca */
-        .highlight-search { border: 3px solid red !important; animation: pulse 1.2s infinite; position: relative; z-index: 10; box-shadow: 0 0 15px rgba(255,0,0,0.5); }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); background-color: #ffcccb; } 100% { transform: scale(1); } }
 
         /* MODAIS */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 99999; justify-content: center; align-items: center; }
-        .modal-box { background: white; padding: 20px; border-radius: 10px; width: 95%; max-width: 1100px; max-height: 90vh; overflow-y: auto; }
-        .tab-hist { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .tab-hist th { background: #2d3748; color: white; padding: 8px; }
-        .tab-hist td { border: 1px solid #ddd; padding: 6px; text-align: center; }
-        .tab-hist tr:hover { background: #f0f7ff; cursor: pointer; }
+        .modal-box { background: white; padding: 20px; border-radius: 10px; width: 95%; max-width: 1200px; max-height: 90vh; overflow-y: auto; }
+        .tab-padrao { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+        .tab-padrao th { background: #2d3748; color: white; padding: 8px; position: sticky; top: 0; }
+        .tab-padrao td { border: 1px solid #ddd; padding: 6px; text-align: center; }
+        .tab-padrao tr:hover { background: #f0f7ff; }
 
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -155,14 +150,14 @@
     <div class="topo-controles">
         <div class="controles-esquerda">
             <button class="btn-nav btn-lista" onclick="abrirHistorico()">📋 Ver Lista/Histórico</button>
+            <button class="btn-nav btn-baixa" onclick="abrirBaixaBooking()">💰 Baixa Booking</button>
             <button class="btn-nav" onclick="imprimirMapa4Meses()">🖨️ Mapa</button>
             <button class="btn-nav" onclick="abrirModalEscolhaFaxina()">🧹 Faxina</button>
         </div>
 
-        <!-- BUSCA GLOBAL RESTAURADA COM BOTÃO LIMPAR -->
         <div class="container-busca">
             <input type="text" class="input-busca" id="busca-hospede" placeholder="🔍 Localizar hóspede..." oninput="iniciarBuscaGlobal()">
-            <button class="btn-busca-nav btn-limpar-busca" title="Limpar busca" onclick="limparBusca()">X</button>
+            <button class="btn-busca-nav btn-limpar-busca" onclick="limparBusca()">X</button>
             <button class="btn-busca-nav" onclick="navegarBusca(-1)">◀</button>
             <span id="cont-busca">0/0</span>
             <button class="btn-busca-nav" onclick="navegarBusca(1)">▶</button>
@@ -177,24 +172,65 @@
     <div id="area-mapas"></div>
 </div>
 
-<div id="area-impressao"></div>
-
-<!-- MODAL HISTÓRICO -->
-<div id="modalHistorico" class="modal-overlay">
+<!-- MODAL BAIXA BOOKING -->
+<div id="modalBaixaBooking" class="modal-overlay">
     <div class="modal-box">
-        <h3>Histórico de Reservas</h3>
-        <table class="tab-hist">
+        <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #d69e2e; padding-bottom:10px; margin-bottom:15px;">
+            <h2 style="margin:0; color:#d69e2e;">Conciliação de Pagamentos Booking</h2>
+            <div class="container-busca">
+                <input type="number" step="0.01" class="input-busca" id="busca-valor-booking" placeholder="🔍 Pesquisar Valor (R$)..." oninput="filtrarValorBooking()">
+                <button class="btn-busca-nav btn-limpar-busca" onclick="limparBuscaBooking()">X</button>
+            </div>
+            <div>
+                <button class="btn-nav" style="background:#38a169; color:white;" onclick="abrirRelatorioPagos()">Ver Relatório de Pagos</button>
+                <button class="btn-nav" onclick="fecharModais()">Fechar</button>
+            </div>
+        </div>
+        <table class="tab-padrao">
             <thead>
                 <tr>
-                    <th>Check-in</th><th>Check-out</th><th>Hóspede</th><th>Apto</th><th>Dias</th><th>#Ayrton</th><th>Valor</th><th>Data Crédito</th><th>Status</th>
+                    <th>Check-in</th><th>Check-out</th><th>Hóspede</th><th>Apto</th><th>Dias</th><th>#Ayrton</th><th>Valor (R$)</th><th>Data do Crédito</th><th>Ação</th>
                 </tr>
             </thead>
-            <tbody id="corpo-historico"></tbody>
+            <tbody id="corpo-baixa-booking"></tbody>
         </table>
-        <br>
-        <button class="btn-nav" onclick="fecharModais()">Fechar</button>
     </div>
 </div>
+
+<!-- MODAL RELATÓRIO PAGOS -->
+<div id="modalRelatorioPagos" class="modal-overlay">
+    <div class="modal-box" style="max-width:800px;">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom:15px;">
+            <h3>Relatório de Reservas Pagas (Booking)</h3>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <label>Mês:</label>
+                <select id="pagos-mes" onchange="renderRelatorioPagos()" style="width:100px;"></select>
+                <label>Ano:</label>
+                <input type="number" id="pagos-ano" value="2026" onchange="renderRelatorioPagos()" style="width:80px;">
+            </div>
+            <button class="btn-nav" onclick="document.getElementById('modalRelatorioPagos').style.display='none'">Voltar</button>
+        </div>
+        <div id="print-relatorio-pagos">
+            <table class="tab-padrao">
+                <thead>
+                    <tr><th>Check-in</th><th>Hóspede</th><th>Apto</th><th>Valor</th><th>Data Crédito</th></tr>
+                </thead>
+                <tbody id="corpo-pagos"></tbody>
+                <tfoot>
+                    <tr style="background:#eee; font-weight:bold;">
+                        <td colspan="3" style="text-align:right;">TOTAL PAGO NO MÊS:</td>
+                        <td id="total-pagos-mes"></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <br>
+        <button class="btn-salvar" onclick="imprimirRelatorioPagos()">Imprimir este Relatório</button>
+    </div>
+</div>
+
+<div id="area-impressao"></div>
 
 <script>
     const SB_URL = "https://eqoayyftpddombylgxpw.supabase.co";
@@ -205,8 +241,6 @@
     let mesBase = new Date(); mesBase.setDate(1);
     let aptosGlobais = [];
     let reservasGlobais = [];
-    let resultadosBusca = [];
-    let indiceBusca = -1;
     const diasSemanaNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
     function fmt(d) { if(!d) return ""; return d.toString().split('T')[0].split(' ')[0].trim(); }
@@ -231,6 +265,15 @@
         const select = document.getElementById('apto_id');
         select.innerHTML = '<option value="">Selecione...</option>';
         aptosGlobais.forEach(a => select.innerHTML += `<option value="${a.id}">${a.nome_apto}</option>`);
+        
+        // Setup Meses Relatório
+        const selMes = document.getElementById('pagos-mes');
+        ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].forEach((m, i) => {
+            selMes.innerHTML += `<option value="${i}">${m}</option>`;
+        });
+        selMes.value = new Date().getMonth();
+        document.getElementById('pagos-ano').value = new Date().getFullYear();
+
         renderizarMapaTriplo();
     }
 
@@ -245,71 +288,6 @@
             const dataFoco = new Date(mesBase.getFullYear(), mesBase.getMonth() + i, 1);
             area.appendChild(criarTabelaMes(dataFoco, ativas));
         }
-        if(indiceBusca >= 0) aplicarDestaqueBusca();
-    }
-
-    // LÓGICA DE BUSCA GLOBAL RESTAURADA
-    function iniciarBuscaGlobal() {
-        const busca = document.getElementById('busca-hospede').value.toLowerCase().trim();
-        if(busca.length < 2) {
-            resultadosBusca = [];
-            indiceBusca = -1;
-            document.getElementById('cont-busca').innerText = "0/0";
-            limparDestaques();
-            return;
-        }
-        resultadosBusca = reservasGlobais
-            .filter(r => !r.cancelada && r.guest_principal.toLowerCase().includes(busca))
-            .sort((a,b) => new Date(b.data_checkin) - new Date(a.data_checkin));
-
-        if(resultadosBusca.length > 0) {
-            indiceBusca = 0;
-            irParaResultadoBusca();
-        } else {
-            indiceBusca = -1;
-            document.getElementById('cont-busca').innerText = "0/0";
-            limparDestaques();
-        }
-    }
-
-    function limparBusca() {
-        document.getElementById('busca-hospede').value = '';
-        resultadosBusca = [];
-        indiceBusca = -1;
-        document.getElementById('cont-busca').innerText = "0/0";
-        limparDestaques();
-        renderizarMapaTriplo();
-    }
-
-    function navegarBusca(dir) {
-        if(resultadosBusca.length === 0) return;
-        indiceBusca += dir;
-        if(indiceBusca >= resultadosBusca.length) indiceBusca = 0;
-        if(indiceBusca < 0) indiceBusca = resultadosBusca.length - 1;
-        irParaResultadoBusca();
-    }
-
-    function irParaResultadoBusca() {
-        const res = resultadosBusca[indiceBusca];
-        document.getElementById('cont-busca').innerText = `${indiceBusca + 1} / ${resultadosBusca.length}`;
-        const dataRes = new Date(res.data_checkin + "T12:00:00");
-        mesBase = new Date(dataRes.getFullYear(), dataRes.getMonth(), 1);
-        renderizarMapaTriplo().then(() => { aplicarDestaqueBusca(); });
-    }
-
-    function aplicarDestaqueBusca() {
-        limparDestaques();
-        if(indiceBusca < 0) return;
-        const res = resultadosBusca[indiceBusca];
-        const celula = document.getElementById(`cell-${res.id}`);
-        if(celula) {
-            celula.classList.add('highlight-search');
-            celula.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }
-
-    function limparDestaques() {
-        document.querySelectorAll('.highlight-search').forEach(el => el.classList.remove('highlight-search'));
     }
 
     function sugerirAyrton() {
@@ -344,27 +322,20 @@
                 const entrandoH = reservas.find(r => r.apto_id === apto.id && fmt(r.data_checkin) === dIso);
                 
                 if (saindoH && entrandoH) {
-                    html += `<td class="reserva-vinho" id="cell-v-${entrandoH.id}" onclick="prepararEdicao('${entrandoH.id}')"></td>`;
+                    html += `<td class="reserva-vinho" onclick="prepararEdicao('${entrandoH.id}')"></td>`;
                 } else {
                     const resA = reservas.find(r => r.apto_id === apto.id && dIso >= fmt(r.data_checkin) && dIso <= fmt(r.data_checkout));
                     if (resA && (dIso === fmt(resA.data_checkin) || d === 1 || (saindoH === undefined && dIso > fmt(resA.data_checkin)))) {
-                        let ok = false;
-                        if (dIso === fmt(resA.data_checkin)) ok = true;
-                        else if (d === 1) ok = true;
-                        else if (saindoH === undefined && dIso > fmt(resA.data_checkin)) ok = true;
-
-                        if (ok) {
-                            let dur = 0; let tempD = d;
-                            while(tempD <= ultimoDia) {
-                                const dL = new Date(ano, mes, tempD).toISOString().split('T')[0];
-                                if (dL > fmt(resA.data_checkout)) break;
-                                if (reservas.some(r => r.apto_id === apto.id && fmt(r.data_checkout) === dL && reservas.some(r2 => r2.apto_id === apto.id && fmt(r2.data_checkin) === dL)) && tempD > d) break;
-                                dur++; tempD++;
-                            }
-                            const cod = {'Booking':'B','AirBnb':'A','VRBO':'V','D':'D','P':'P'}[resA.origem] || "R";
-                            html += `<td colspan="${dur}" id="cell-${resA.id}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal}</td>`;
-                            d += (dur - 1);
-                        } else html += `<td></td>`;
+                        let dur = 0; let tempD = d;
+                        while(tempD <= ultimoDia) {
+                            const dL = new Date(ano, mes, tempD).toISOString().split('T')[0];
+                            if (dL > fmt(resA.data_checkout)) break;
+                            if (reservas.some(r => r.apto_id === apto.id && fmt(r.data_checkout) === dL && reservas.some(r2 => r2.apto_id === apto.id && fmt(r2.data_checkin) === dL)) && tempD > d) break;
+                            dur++; tempD++;
+                        }
+                        const cod = {'Booking':'B','AirBnb':'A','VRBO':'V','D':'D','P':'P'}[resA.origem] || "R";
+                        html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal}</td>`;
+                        d += (dur - 1);
                     } else html += `<td></td>`;
                 }
             }
@@ -373,6 +344,117 @@
         html += `</tbody></table>`; container.innerHTML += html; return container;
     }
 
+    // LÓGICA BAIXA BOOKING
+    let listaBaixaBooking = [];
+    function abrirBaixaBooking() {
+        document.getElementById('modalBaixaBooking').style.display = 'flex';
+        renderizarBaixaBooking();
+    }
+
+    function renderizarBaixaBooking() {
+        const buscaValor = parseFloat(document.getElementById('busca-valor-booking').value) || null;
+        
+        listaBaixaBooking = reservasGlobais.filter(r => 
+            r.origem === 'Booking' && 
+            !r.cancelada && 
+            (!r.data_credito || r.data_credito === "")
+        );
+
+        if(buscaValor) {
+            listaBaixaBooking = listaBaixaBooking.filter(r => parseFloat(r.valor_creditado) === buscaValor);
+        }
+
+        const corpo = document.getElementById('corpo-baixa-booking');
+        corpo.innerHTML = "";
+
+        listaBaixaBooking.sort((a,b) => new Date(a.data_checkin) - new Date(b.data_checkin));
+
+        listaBaixaBooking.forEach(r => {
+            const aptoNome = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "-";
+            corpo.innerHTML += `
+                <tr>
+                    <td>${fmt(r.data_checkin).split('-').reverse().join('/')}</td>
+                    <td>${fmt(r.data_checkout).split('-').reverse().join('/')}</td>
+                    <td style="text-align:left">${r.guest_principal}</td>
+                    <td>${aptoNome}</td>
+                    <td>${r.noites}</td>
+                    <td>${r.ayrton_reserva_id || ""}</td>
+                    <td style="font-weight:bold; color:#2b6cb0;">$ ${parseFloat(r.valor_creditado || 0).toFixed(2)}</td>
+                    <td><input type="date" id="baixa-data-${r.id}" style="width:130px; font-size:11px;"></td>
+                    <td><button class="btn-nav" style="background:#38a169; color:white; padding:4px 8px;" onclick="salvarBaixaRapida('${r.id}')">SALVAR</button></td>
+                </tr>`;
+        });
+    }
+
+    async function salvarBaixaRapida(id) {
+        const dataCredito = document.getElementById(`baixa-data-${id}`).value;
+        if(!dataCredito) { alert("Informe a data do crédito."); return; }
+        
+        const { error } = await supabaseClient.from('reservas').update({ data_credito: dataCredito }).eq('id', id);
+        if(!error) {
+            // Atualiza o array local para refletir no mapa e na lista sem reload pesado
+            const idx = reservasGlobais.findIndex(r => r.id === id);
+            if(idx !== -1) reservasGlobais[idx].data_credito = dataCredito;
+            renderizarBaixaBooking();
+            renderizarMapaTriplo();
+        } else {
+            alert("Erro ao salvar baixa.");
+        }
+    }
+
+    function filtrarValorBooking() { renderizarBaixaBooking(); }
+    function limparBuscaBooking() { document.getElementById('busca-valor-booking').value = ""; renderizarBaixaBooking(); }
+
+    // RELATÓRIO DE PAGOS
+    function abrirRelatorioPagos() {
+        document.getElementById('modalRelatorioPagos').style.display = 'flex';
+        renderRelatorioPagos();
+    }
+
+    function renderRelatorioPagos() {
+        const mes = parseInt(document.getElementById('pagos-mes').value);
+        const ano = parseInt(document.getElementById('pagos-ano').value);
+        const corpo = document.getElementById('corpo-pagos');
+        const totalElem = document.getElementById('total-pagos-mes');
+        corpo.innerHTML = "";
+        
+        let total = 0;
+        const pagos = reservasGlobais.filter(r => {
+            if(!r.data_credito || r.origem !== 'Booking') return false;
+            const d = new Date(r.data_credito + "T12:00:00");
+            return d.getMonth() === mes && d.getFullYear() === ano;
+        });
+
+        pagos.sort((a,b) => new Date(a.data_credito) - new Date(b.data_credito));
+
+        pagos.forEach(r => {
+            const aptoNome = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "-";
+            corpo.innerHTML += `
+                <tr>
+                    <td>${fmt(r.data_checkin).split('-').reverse().join('/')}</td>
+                    <td style="text-align:left">${r.guest_principal}</td>
+                    <td>${aptoNome}</td>
+                    <td>$ ${parseFloat(r.valor_creditado || 0).toFixed(2)}</td>
+                    <td>${fmt(r.data_credito).split('-').reverse().join('/')}</td>
+                </tr>`;
+            total += parseFloat(r.valor_creditado || 0);
+        });
+
+        totalElem.innerText = `$ ${total.toFixed(2)}`;
+    }
+
+    function imprimirRelatorioPagos() {
+        const conteudo = document.getElementById('print-relatorio-pagos').innerHTML;
+        const janela = window.open('', '', 'width=800,height=600');
+        janela.document.write('<html><head><title>Relatório Pagos</title><style>table{width:100%;border-collapse:collapse;} th,td{border:1px solid #000;padding:8px;text-align:center;font-family:Arial;} th{background:#eee;}</style></head><body>');
+        janela.document.write('<h2 style="text-align:center;">RELATÓRIO DE RESERVAS PAGAS - BOOKING</h2>');
+        janela.document.write(conteudo);
+        janela.document.write('</body></html>');
+        janela.document.close();
+        janela.print();
+    }
+
+    // --- FUNÇÕES ORIGINAIS MANTIDAS ---
     function abrirHistorico() {
         const corpo = document.getElementById('corpo-historico');
         corpo.innerHTML = "";
