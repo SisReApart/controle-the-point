@@ -79,6 +79,9 @@
         .paginacao button { padding: 5px 10px; cursor: pointer; border: 1px solid #ddd; background: white; }
         .paginacao button.active { background: #2d3748; color: white; }
 
+		.input-conf { padding: 4px; border: 1px solid #3182ce; border-radius: 4px; font-size: 11px; width: 100px; }
+		.btn-baixar { background: #38a169; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 10px; }
+
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             body * { visibility: hidden; }
@@ -172,6 +175,7 @@
     <div class="topo-controles">
         <div class="controles-esquerda">
             <button class="btn-nav btn-lista" onclick="abrirHistorico()">📋 Ver Lista/Histórico</button>
+			<button class="btn-nav" style="background: #3182ce; color: white; border: none;" onclick="abrirConferencia()">💰 Conferência Booking/Chase</button>
             <button class="btn-nav" onclick="imprimirMapa4Meses()">🖨️ Mapa</button>
             <button class="btn-nav" onclick="abrirModalEscolhaFaxina()">🧹 Faxina</button>
         </div>
@@ -220,6 +224,31 @@
 <div id="modalErro" class="modal-overlay"><div class="modal-box" style="max-width:300px;"><h3 style="color:#e53e3e">Aviso</h3><p id="msgErro"></p><button class="btn-modal" style="background:#e53e3e;color:white" onclick="fecharModais()">OK</button></div></div>
 <div id="modalAlerta" class="modal-overlay"><div class="modal-box" style="max-width:300px;"><h3 style="color:#d69e2e">Atenção</h3><p id="msgAlerta"></p><button class="btn-modal" style="background:#38a169;color:white" onclick="confirmarAlerta()">Continuar</button><button class="btn-modal" style="background:#718096;color:white" onclick="limparDatas()">Corrigir</button></div></div>
 <div id="modalFaxina" class="modal-overlay"><div class="modal-box" style="max-width:400px;"><h3>Faxina</h3><div class="campo"><label>Mês:</label><select id="sel_mes_faxina"><option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option><option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option><option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option><option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option></select></div><div class="campo"><label>Ano:</label><input type="number" id="sel_ano_faxina" value="2026"></div><button class="btn-modal" style="background:#38a169;color:white" onclick="gerarRelatorioFaxinaFinal()">Gerar</button><button class="btn-modal" onclick="fecharModais()">Sair</button></div></div>
+<!-- MODAL CONFERÊNCIA BOOKING/CHASE -->
+<div id="modalConferencia" class="modal-overlay">
+    <div class="modal-box" style="max-width: 1200px;">
+        <div class="header-hist">
+            <h3>Conferência Booking/Chase (Pendentes)</h3>
+            <button class="btn-modal" style="background:#e53e3e; color:white;" onclick="fecharModais()">FECHAR</button>
+        </div>
+        <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Exibindo apenas reservas <b>Booking</b>, <b>Ativas</b> e <b>Sem Data de Crédito</b>.</p>
+        <table class="tab-hist">
+            <thead>
+                <tr>
+                    <th>Check-in</th>
+                    <th>Hóspede</th>
+                    <th>Apto</th>
+                    <th>Check-out</th>
+                    <th>#Ayrton</th>
+                    <th>Valor do Crédito</th>
+                    <th>Data do Crédito</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody id="corpo-conferencia"></tbody>
+        </table>
+    </div>
+</div>
 
 <script>
     const SB_URL = "https://eqoayyftpddombylgxpw.supabase.co";
@@ -620,6 +649,64 @@
         html += `<tr style="font-weight:bold"><td colspan="4" style="text-align:right; padding-right:10px">TOTAL GERAL A PAGAR NO MÊS: ➔</td><td style="background:#999; text-align:center">$${total.toFixed(2)}</td></tr></tbody></table>`;
         folha.innerHTML = html; area.appendChild(folha); window.print(); area.innerHTML = ""; fecharModais();
     }
+	async function abrirConferencia() {
+		document.getElementById('modalConferencia').style.display = 'flex';
+		renderConferencia();
+	}
+
+	function renderConferencia() {
+		let pendentes = reservasGlobais.filter(r => 
+			r.origem === 'Booking' && 
+			r.cancelada === false && 
+			(!r.data_credito || r.data_credito === "")
+		);
+			pendentes.sort((a, b) => new Date(a.data_checkin) - new Date(b.data_checkin));
+			const corpo = document.getElementById('corpo-conferencia');
+			corpo.innerHTML = "";
+			pendentes.forEach(r => {
+				const aptoNome = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "N/A";
+				corpo.innerHTML += `
+					<tr>
+						<td>${new Date(r.data_checkin + "T12:00:00").toLocaleDateString('pt-BR')}</td>
+						<td>${r.guest_principal}</td>
+						<td>${aptoNome}</td>
+						<td>${new Date(r.data_checkout + "T12:00:00").toLocaleDateString('pt-BR')}</td>
+						<td>${r.ayrton_reserva_id || ""}</td>
+						<td><input type="number" step="0.01" class="input-conf" id="conf-val-${r.id}" value="${r.valor_creditado || 0}"></td>
+						<td><input type="date" class="input-conf" id="conf-data-${r.id}"></td>
+						<td><button class="btn-baixar" onclick="salvarBaixa('${r.id}')">DAR BAIXA (SALVAR)</button></td>
+					</tr>`;
+		});
+		if(pendentes.length === 0) {
+				corpo.innerHTML = "<tr><td colspan='8' style='padding:20px; text-align:center;'>Nenhuma reserva pendente encontrada.</td></tr>";
+			}
+			}
+
+			async function salvarBaixa(id) {
+				const novaData = document.getElementById(`conf-data-${id}`).value;
+				const novoValor = document.getElementById(`conf-val-${id}`).value;
+				if (!novaData) { alert("Por favor, preencha a data do crédito."); return; }
+				const { error } = await supabaseClient.from('reservas').update({ 
+						data_credito: novaData, 
+						valor_creditado: novoValor,
+						usuario_alterou: userLogado.usuario,
+						data_alteracao: new Date().toISOString()
+					}).eq('id', id);
+
+				if (error) { alert("Erro ao salvar: " + error.message); } 
+				else {
+						const index = reservasGlobais.findIndex(r => r.id === id);
+						if (index !== -1) {
+							reservasGlobais[index].data_credito = novaData;
+							reservasGlobais[index].valor_creditado = novoValor;
+					}
+						renderConferencia();
+					renderizarMapaTriplo();
+				}
+			}
+	
+	
+	
 </script>
 </body>
 </html>
