@@ -210,7 +210,7 @@
             <button class="btn-modal" style="background:#e53e3e; color:white;" onclick="fecharModais()">FECHAR</button>
         </div>
         <table class="tab-hist">
-            <thead><tr><th>Check-in</th><th>Hóspede</th><th>Apto</th><th>Check-out</th><th>Dias</th><th>#Ayrton</th><th>Valor</th><th>Status</th></tr></thead>
+            <thead><tr><th>Check-in</th><th>Check-out</th><th>Hóspede</th><th>Apto</th><th>Dias</th><th>#Ayrton</th><th>Valor</th><th>Data Crédito</th><th>Status</th></tr></thead>
             <tbody id="corpo-historico"></tbody>
         </table>
         <div id="paginacao-hist" class="paginacao"></div>
@@ -479,7 +479,20 @@
         dataPaginated.forEach(r => {
             const aptoNome = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "N/A";
             const status = r.cancelada ? '<b style="color:red">Cancelada</b>' : '<b style="color:green">Ativa</b>';
-            corpo.innerHTML += `<tr onclick="prepararEdicao('${r.id}'); fecharModais();" class="${r.cancelada ? 'res-cancelada' : ''}"><td>${new Date(r.data_checkin + "T12:00:00").toLocaleDateString('pt-BR')}</td><td>${r.guest_principal}</td><td>${aptoNome}</td><td>${new Date(r.data_checkout + "T12:00:00").toLocaleDateString('pt-BR')}</td><td>${r.noites}</td><td>${r.ayrton_reserva_id || ""}</td><td>$${r.valor_creditado || 0}</td><td>${status}</td></tr>`;
+            const dtCredito = r.data_credito ? new Date(r.data_credito + "T12:00:00").toLocaleDateString('pt-BR') : "---";
+            
+            corpo.innerHTML += `
+                <tr onclick="prepararEdicao('${r.id}'); fecharModais();" class="${r.cancelada ? 'res-cancelada' : ''}">
+                    <td>${new Date(r.data_checkin + "T12:00:00").toLocaleDateString('pt-BR')}</td>
+                    <td>${new Date(r.data_checkout + "T12:00:00").toLocaleDateString('pt-BR')}</td>
+                    <td>${r.guest_principal}</td>
+                    <td>${aptoNome}</td>
+                    <td>${r.noites}</td>
+                    <td>${r.ayrton_reserva_id || ""}</td>
+                    <td>R$ ${r.valor_creditado || 0}</td>
+                    <td>${dtCredito}</td>
+                    <td>${status}</td>
+                </tr>`;
         });
         const pagDiv = document.getElementById('paginacao-hist'); pagDiv.innerHTML = "";
         for(let i=1; i<=totalPages; i++) { pagDiv.innerHTML += `<button class="${i === histPage ? 'active' : ''}" onclick="histPage=${i}; renderHistorico()">${i}</button>`; }
