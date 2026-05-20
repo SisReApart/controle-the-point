@@ -42,7 +42,7 @@
         .input-busca { padding: 6px; border: 1px solid #cbd5e0; border-radius: 4px; width: 180px; font-size: 11px; }
         .btn-busca-nav { padding: 4px 8px; cursor: pointer; background: #3182ce; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 10px; }
         #cont-busca { font-size: 10px; font-weight: bold; color: #2b6cb0; min-width: 35px; text-align: center; }
-
+		.btn-limpar-x { background: #e53e3e; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-weight: bold; font-size: 11px; }
         .btn-nav { padding: 8px 12px; cursor: pointer; background: white; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold; font-size: 11px; }
         .btn-lista { background: #2d3748; color: white; border: none; }
 
@@ -150,12 +150,14 @@
         </div>
 
         <!-- BUSCA GLOBAL COM NAVEGAÇÃO -->
-        <div class="container-busca">
-            <input type="text" class="input-busca" id="busca-hospede" placeholder="🔍 Localizar hóspede (Global)..." oninput="iniciarBuscaGlobal()">
-            <button class="btn-busca-nav" onclick="navegarBusca(-1)">◀</button>
-            <span id="cont-busca">0/0</span>
-            <button class="btn-busca-nav" onclick="navegarBusca(1)">▶</button>
-        </div>
+        <!-- BUSCA GLOBAL COM NAVEGAÇÃO E LIMPAR -->
+		<div class="container-busca">
+			<input type="text" class="input-busca" id="busca-hospede" placeholder="🔍 Localizar hóspede (Global)..." oninput="iniciarBuscaGlobal()">
+			<button class="btn-limpar-x" onclick="limparBusca()" title="Limpar busca">X</button>
+			<button class="btn-busca-nav" onclick="navegarBusca(-1)">◀</button>
+			<span id="cont-busca">0/0</span>
+			<button class="btn-busca-nav" onclick="navegarBusca(1)">▶</button>
+		</div>
 
         <div class="controles-direita">
             <button class="btn-nav" onclick="mudarMes(-1)">◀ ANTERIOR</button>
@@ -349,6 +351,15 @@
         });
         html += `</tbody></table>`; container.innerHTML += html; return container;
     }
+
+	function limparBusca() {
+		const input = document.getElementById('busca-hospede');
+		input.value = ''; // Limpa o texto digitado
+		resultadosBusca = [];
+		indiceBusca = -1;
+		document.getElementById('cont-busca').innerText = "0/0";
+		limparDestaques(); // Remove as bordas vermelhas do mapa
+	}
 
     // LÓGICA DE BUSCA GLOBAL
     function iniciarBuscaGlobal() {
