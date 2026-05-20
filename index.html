@@ -81,6 +81,8 @@
 
 		.input-conf { padding: 4px; border: 1px solid #3182ce; border-radius: 4px; font-size: 11px; width: 100px; }
 		.btn-baixar { background: #38a169; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 10px; }
+		.input-busca-valor { padding: 6px; border: 2px solid #3182ce; border-radius: 4px; font-size: 13px; width: 200px; margin-right: 10px; }
+		.resumo-pagos { background: #ebf8ff; padding: 15px; border-radius: 8px; margin-top: 10px; font-weight: bold; font-size: 16px; border: 1px solid #3182ce; text-align: right; }
 
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -176,6 +178,7 @@
         <div class="controles-esquerda">
             <button class="btn-nav btn-lista" onclick="abrirHistorico()">📋 Ver Lista/Histórico</button>
 			<button class="btn-nav" style="background: #3182ce; color: white; border: none;" onclick="abrirConferencia()">💰 Conferência Booking/Chase</button>
+			<button class="btn-nav" style="background: #2d3748; color: white; border: none;" onclick="abrirRelatorioPagos()">📊 Relatório de Pagos (Mês)</button>
             <button class="btn-nav" onclick="imprimirMapa4Meses()">🖨️ Mapa</button>
             <button class="btn-nav" onclick="abrirModalEscolhaFaxina()">🧹 Faxina</button>
         </div>
@@ -231,7 +234,11 @@
             <h3>Conferência Booking/Chase (Pendentes)</h3>
             <button class="btn-modal" style="background:#e53e3e; color:white;" onclick="fecharModais()">FECHAR</button>
         </div>
-        <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Exibindo apenas reservas <b>Booking</b>, <b>Ativas</b> e <b>Sem Data de Crédito</b>.</p>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+			<label style="font-size: 12px; font-weight: bold;">🔍 FILTRAR POR VALOR (R$):</label>
+			<input type="number" step="0.01" class="input-busca-valor" id="busca-valor-conf" placeholder="Ex: 250.50" oninput="renderConferencia()">
+			<span style="font-size: 11px; color: #666;">(Mostra apenas Booking, Ativas e Sem Data Crédito)</span>
+		</div>
         <table class="tab-hist">
             <thead>
                 <tr>
@@ -247,6 +254,27 @@
             </thead>
             <tbody id="corpo-conferencia"></tbody>
         </table>
+    </div>
+</div>
+
+<!-- MODAL RELATÓRIO DE PAGOS -->
+<div id="modalPagos" class="modal-overlay">
+    <div class="modal-box" style="max-width: 1000px;">
+        <div class="header-hist">
+            <h3>Reservas Pagas no Mês</h3>
+            <div style="display: flex; gap: 5px;">
+                <select id="pagos-mes" onchange="renderRelatorioPagos()" class="input-conf"></select>
+                <input type="number" id="pagos-ano" onchange="renderRelatorioPagos()" class="input-conf" style="width: 70px;">
+            </div>
+            <button class="btn-modal" style="background:#e53e3e; color:white;" onclick="fecharModais()">FECHAR</button>
+        </div>
+        <table class="tab-hist">
+            <thead>
+                <tr><th>Data Crédito</th><th>Hóspede</th><th>Apto</th><th>Check-out</th><th>#Ayrton</th><th>Valor Recebido</th></tr>
+            </thead>
+            <tbody id="corpo-pagos"></tbody>
+        </table>
+        <div id="total-pagos" class="resumo-pagos">Total Recebido no Mês: R$ 0,00</div>
     </div>
 </div>
 
@@ -649,63 +677,121 @@
         html += `<tr style="font-weight:bold"><td colspan="4" style="text-align:right; padding-right:10px">TOTAL GERAL A PAGAR NO MÊS: ➔</td><td style="background:#999; text-align:center">$${total.toFixed(2)}</td></tr></tbody></table>`;
         folha.innerHTML = html; area.appendChild(folha); window.print(); area.innerHTML = ""; fecharModais();
     }
-	async function abrirConferencia() {
-		document.getElementById('modalConferencia').style.display = 'flex';
-		renderConferencia();
-	}
-
-	function renderConferencia() {
-		let pendentes = reservasGlobais.filter(r => 
-			r.origem === 'Booking' && 
-			r.cancelada === false && 
-			(!r.data_credito || r.data_credito === "")
-		);
-			pendentes.sort((a, b) => new Date(a.data_checkin) - new Date(b.data_checkin));
-			const corpo = document.getElementById('corpo-conferencia');
-			corpo.innerHTML = "";
-			pendentes.forEach(r => {
-				const aptoNome = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "N/A";
-				corpo.innerHTML += `
-					<tr>
-						<td>${new Date(r.data_checkin + "T12:00:00").toLocaleDateString('pt-BR')}</td>
-						<td>${r.guest_principal}</td>
-						<td>${aptoNome}</td>
-						<td>${new Date(r.data_checkout + "T12:00:00").toLocaleDateString('pt-BR')}</td>
-						<td>${r.ayrton_reserva_id || ""}</td>
-						<td><input type="number" step="0.01" class="input-conf" id="conf-val-${r.id}" value="${r.valor_creditado || 0}"></td>
-						<td><input type="date" class="input-conf" id="conf-data-${r.id}"></td>
-						<td><button class="btn-baixar" onclick="salvarBaixa('${r.id}')">DAR BAIXA (SALVAR)</button></td>
-					</tr>`;
-		});
-		if(pendentes.length === 0) {
-				corpo.innerHTML = "<tr><td colspan='8' style='padding:20px; text-align:center;'>Nenhuma reserva pendente encontrada.</td></tr>";
-			}
-			}
-
-			async function salvarBaixa(id) {
-				const novaData = document.getElementById(`conf-data-${id}`).value;
-				const novoValor = document.getElementById(`conf-val-${id}`).value;
-				if (!novaData) { alert("Por favor, preencha a data do crédito."); return; }
-				const { error } = await supabaseClient.from('reservas').update({ 
-						data_credito: novaData, 
-						valor_creditado: novoValor,
-						usuario_alterou: userLogado.usuario,
-						data_alteracao: new Date().toISOString()
-					}).eq('id', id);
-
-				if (error) { alert("Erro ao salvar: " + error.message); } 
-				else {
-						const index = reservasGlobais.findIndex(r => r.id === id);
-						if (index !== -1) {
-							reservasGlobais[index].data_credito = novaData;
-							reservasGlobais[index].valor_creditado = novoValor;
-					}
-						renderConferencia();
-					renderizarMapaTriplo();
-				}
-			}
 	
-	
+	// 1. ABRE A JANELA DE CONFERÊNCIA
+async function abrirConferencia() {
+    document.getElementById('modalConferencia').style.display = 'flex';
+    renderConferencia();
+}
+
+// 2. GERA A LISTA DE PENDÊNCIAS COM BUSCA POR VALOR
+function renderConferencia() {
+    const filtroValor = document.getElementById('busca-valor-conf').value;
+    
+    let pendentes = reservasGlobais.filter(r => 
+        r.origem === 'Booking' && 
+        r.cancelada === false && 
+        (!r.data_credito || r.data_credito === "")
+    );
+
+    // Se você digitou algo no campo de busca, ele filtra aqui
+    if (filtroValor) {
+        pendentes = pendentes.filter(r => parseFloat(r.valor_creditado) == parseFloat(filtroValor));
+    }
+
+    pendentes.sort((a, b) => new Date(a.data_checkin) - new Date(b.data_checkin));
+    const corpo = document.getElementById('corpo-conferencia');
+    corpo.innerHTML = "";
+    
+    pendentes.forEach(r => {
+        const aptoNome = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "N/A";
+        corpo.innerHTML += `
+            <tr>
+                <td>${new Date(r.data_checkin + "T12:00:00").toLocaleDateString('pt-BR')}</td>
+                <td>${r.guest_principal}</td>
+                <td>${aptoNome}</td>
+                <td>${new Date(r.data_checkout + "T12:00:00").toLocaleDateString('pt-BR')}</td>
+                <td>${r.ayrton_reserva_id || ""}</td>
+                <td><input type="number" step="0.01" class="input-conf" id="conf-val-${r.id}" value="${r.valor_creditado || 0}"></td>
+                <td><input type="date" class="input-conf" id="conf-data-${r.id}"></td>
+                <td><button class="btn-baixar" onclick="salvarBaixa('${r.id}')">DAR BAIXA (SALVAR)</button></td>
+            </tr>`;
+    });
+    if(pendentes.length === 0) {
+        corpo.innerHTML = "<tr><td colspan='8' style='padding:20px; text-align:center;'>Nenhum valor correspondente ou pendência encontrada.</td></tr>";
+    }
+}
+
+// 3. SALVA OS DADOS NO BANCO E ATUALIZA A TELA
+async function salvarBaixa(id) {
+    const novaData = document.getElementById(`conf-data-${id}`).value;
+    const novoValor = document.getElementById(`conf-val-${id}`).value;
+    if (!novaData) { alert("Por favor, preencha a data do crédito."); return; }
+    const { error } = await supabaseClient.from('reservas').update({ 
+            data_credito: novaData, 
+            valor_creditado: novoValor,
+            usuario_alterou: userLogado.usuario,
+            data_alteracao: new Date().toISOString()
+        }).eq('id', id);
+
+    if (error) { alert("Erro ao salvar: " + error.message); } 
+    else {
+        const index = reservasGlobais.findIndex(r => r.id === id);
+        if (index !== -1) {
+            reservasGlobais[index].data_credito = novaData;
+            reservasGlobais[index].valor_creditado = novoValor;
+        }
+        renderConferencia();
+        renderizarMapaTriplo();
+    }
+}
+
+// 4. ABRE A JANELA DO RELATÓRIO DE PAGOS
+function abrirRelatorioPagos() {
+    const hoje = new Date();
+    const selMes = document.getElementById('pagos-mes');
+    if(selMes.options.length === 0) {
+        const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+        meses.forEach((m, i) => { selMes.innerHTML += `<option value="${i}">${m}</option>`; });
+    }
+    selMes.value = hoje.getMonth();
+    document.getElementById('pagos-ano').value = hoje.getFullYear();
+    document.getElementById('modalPagos').style.display = 'flex';
+    renderRelatorioPagos();
+}
+
+// 5. GERA A LISTA DE TUDO QUE JÁ FOI PAGO NO MÊS
+function renderRelatorioPagos() {
+    const mes = parseInt(document.getElementById('pagos-mes').value);
+    const ano = parseInt(document.getElementById('pagos-ano').value);
+    const pagas = reservasGlobais.filter(r => {
+        if(!r.data_credito) return false;
+        const dt = new Date(r.data_credito + "T12:00:00");
+        return dt.getMonth() === mes && dt.getFullYear() === ano;
+    });
+    const corpo = document.getElementById('corpo-pagos');
+    corpo.innerHTML = "";
+    let totalGeral = 0;
+    pagas.forEach(r => {
+        const aptoNome = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "N/A";
+        const valor = parseFloat(r.valor_creditado || 0);
+        totalGeral += valor;
+        corpo.innerHTML += `
+            <tr>
+                <td>${new Date(r.data_credito + "T12:00:00").toLocaleDateString('pt-BR')}</td>
+                <td>${r.guest_principal}</td>
+                <td>${aptoNome}</td>
+                <td>${new Date(r.data_checkout + "T12:00:00").toLocaleDateString('pt-BR')}</td>
+                <td>${r.ayrton_reserva_id || ""}</td>
+                <td>R$ ${valor.toFixed(2)}</td>
+            </tr>`;
+    });
+    document.getElementById('total-pagos').innerText = `Total Recebido no Mês: R$ ${totalGeral.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    if(pagas.length === 0) {
+        corpo.innerHTML = "<tr><td colspan='6' style='padding:20px; text-align:center;'>Nenhum pagamento registrado neste mês.</td></tr>";
+    }
+}
+
 	
 </script>
 </body>
