@@ -236,7 +236,7 @@
         </div>
         <div style="background: #f8fafc; padding: 10px; border-radius: 6px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
 			<label style="font-size: 12px; font-weight: bold;">🔍 FILTRAR POR VALOR (R$):</label>
-			<input type="number" step="0.01" class="input-busca-valor" id="busca-valor-conf" placeholder="Ex: 250.50" oninput="renderConferencia()">
+			<input por type="text" step="0.01" class="input-busca-valor" id="busca-valor-conf" placeholder="Ex: 250.50" oninput="renderConferencia()">
 			<span style="font-size: 11px; color: #666;">(Mostra apenas Booking, Ativas e Sem Data Crédito)</span>
 		</div>
         <table class="tab-hist">
@@ -678,15 +678,23 @@
         folha.innerHTML = html; area.appendChild(folha); window.print(); area.innerHTML = ""; fecharModais();
     }
 	
-	// 1. ABRE A JANELA DE CONFERÊNCIA
+// 1. ABRE A JANELA E GARANTE QUE O FILTRO ESTEJA VAZIO
 async function abrirConferencia() {
+    // Localiza o campo de busca e limpa o texto dele
+    const campoBusca = document.getElementById('busca-valor-conf');
+    if (campoBusca) campoBusca.value = ""; 
+
+    // Abre a janela
     document.getElementById('modalConferencia').style.display = 'flex';
+    
+    // Chama a lista (que virá completa pois limpamos o campo acima)
     renderConferencia();
 }
 
-// 2. GERA A LISTA DE PENDÊNCIAS COM BUSCA POR VALOR
+// 2. GERA A LISTA COM FILTRO DE TEXTO (RESOLVE O PROBLEMA DO 737.14)
 function renderConferencia() {
-    const filtroValor = document.getElementById('busca-valor-conf').value;
+    // Pegamos o valor digitado como TEXTO para evitar erros de precisão numérica
+    const filtroValor = document.getElementById('busca-valor-conf').value.trim();
     
     let pendentes = reservasGlobais.filter(r => 
         r.origem === 'Booking' && 
@@ -694,9 +702,13 @@ function renderConferencia() {
         (!r.data_credito || r.data_credito === "")
     );
 
-    // Se você digitou algo no campo de busca, ele filtra aqui
+    // Agora o filtro funciona enquanto você digita (parcialmente)
+    // Se você digitar "737", ele já mostra. Se terminar "737.14", ele continua mostrando.
     if (filtroValor) {
-        pendentes = pendentes.filter(r => parseFloat(r.valor_creditado) == parseFloat(filtroValor));
+        pendentes = pendentes.filter(r => {
+            const valorNaReserva = (r.valor_creditado || 0).toString();
+            return valorNaReserva.includes(filtroValor);
+        });
     }
 
     pendentes.sort((a, b) => new Date(a.data_checkin) - new Date(b.data_checkin));
