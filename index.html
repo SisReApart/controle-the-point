@@ -87,10 +87,8 @@
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             @page { size: letter landscape; margin: 0.2in; }
-            
-            /* Esta linha garante que o menu e o resto sumam APENAS na impressão */
-            body > *:not(#area-impressao) { display: none !important; }
-            
+            body * { visibility: hidden; }
+            #area-impressao, #area-impressao * { visibility: visible; }
             #area-impressao { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; }
             
             .print-landscape { 
@@ -98,24 +96,49 @@
                 width: 100%; 
                 display: flex; 
                 flex-direction: column; 
-                height: 98vh; 
+                height: 98vh; /* Garante que o rodapé fique no fim da página */
                 position: relative;
             }
 
             .mes-print { margin-bottom: 2px !important; border: 1px solid black !important; padding: 0 !important; }
             .mes-print table { border-collapse: collapse !important; width: 100% !important; border: 1px solid black !important; }
-            .mes-print th, .mes-print td { border: 1px solid black !important; height: 18px !important; line-height: 18px !important; font-size: 8px !important; color: black !important; }
-            .mes-print .cabecalho-dias { background: #eeeeee !important; } 
-            .mes-print .cabecalho-semana { background: #ffffff !important; }
+            
+            /* Bordas Pretas e Altura reduzida para caber 5 meses */
+            .mes-print th, .mes-print td { 
+                border: 1px solid black !important; 
+                height: 18px !important; 
+                line-height: 18px !important; 
+                font-size: 8px !important; 
+                color: black !important;
+            }
+
+            /* Cores dos cabeçalhos solicitadas */
+            .mes-print .cabecalho-dias { background: #eeeeee !important; } /* Cinza clarinho */
+            .mes-print .cabecalho-semana { background: #ffffff !important; } /* Branco */
+            
+            /* Título do mês dentro da tabela */
             .print-month-name { font-size: 10px !important; font-weight: bold !important; text-transform: uppercase; }
+
+            /* Nome do Apto maior */
             .mes-print .col-apto { font-size: 11px !important; font-weight: 900 !important; width: 140px !important; text-align: left !important; padding-left: 4px !important; }
+
+            /* Esconder título original que ficava fora da tabela */
             .mes-print .titulo-mes-tabela { display: none !important; }
 
+            /* Rodapé da página */
             .footer-print {
-                display: flex !important; justify-content: space-between; align-items: center;
-                margin-top: auto; padding-top: 5px; font-size: 10px !important; font-family: Arial, sans-serif;
-                border-top: 1px solid black; width: 100%;
+                display: flex !important;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: auto;
+                padding-top: 5px;
+                font-size: 10px !important;
+                font-family: Arial, sans-serif;
+                border-top: 1px solid black;
+                width: 100%;
             }
+
+            .sidebar, .topo-controles, .modal-overlay, #tela-login, #alerta-sequencia { display: none !important; }
         }
     </style>
 </head>
@@ -662,9 +685,9 @@
     async function excluirDeVez() { await supabaseClient.from('reservas').delete().eq('id', document.getElementById('edit_id').value); location.reload(); }
     function abrirModalEscolhaFaxina() { document.getElementById('modalFaxina').style.display = 'flex'; }
 
-    function imprimirMapa5Meses() {
+    function imprimirMapa4Meses() {
         const area = document.getElementById('area-impressao'); 
-        area.innerHTML = ""; 
+        area.innerHTML = "";
         
         let dataInicio = new Date(mesBase);
         let dataUltima = new Date();
@@ -676,18 +699,21 @@
         const ativas = reservasGlobais.filter(r => !r.cancelada);
         const dataHoraGeracao = new Date().toLocaleString('pt-BR');
 
+        // Loop para gerar páginas com 5 meses cada
         for (let i = 0; i < totalMeses; i += 5) {
             const folha = document.createElement('div');
             folha.className = 'print-landscape';
             
+            // Adiciona os 5 meses
             for (let j = 0; j < 5; j++) {
                 if (i + j < totalMeses) {
                     const df = new Date(dataInicio.getFullYear(), dataInicio.getMonth() + i + j, 1);
-                    const mesB = criarTabelaMes(df, ativas, true); 
+                    const mesB = criarTabelaMes(df, ativas, true); // True ativa o cabeçalho novo
                     folha.appendChild(mesB);
                 }
             }
 
+            // Adiciona o Rodapé solicitado
             const rodape = document.createElement('div');
             rodape.className = 'footer-print';
             rodape.innerHTML = `
@@ -696,18 +722,10 @@
                 <div>Página ${Math.floor(i/5) + 1}</div>
             `;
             folha.appendChild(rodape);
+
             area.appendChild(folha);
         }
-
-        // Comando de impressão
         window.print();
-
-        // O SEGREDO ESTÁ AQUI: 
-        // Aguarda meio segundo após fechar a janela de impressão para limpar o conteúdo.
-        // Isso obriga o navegador a voltar para o layout normal da tela (reexibir o menu).
-        setTimeout(() => {
-            area.innerHTML = "";
-        }, 500);
     }
 
     function gerarRelatorioFaxinaFinal() {
