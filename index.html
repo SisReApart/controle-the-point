@@ -208,14 +208,7 @@
 
     <div class="campo"><label>OBS:</label><textarea id="observacoes" rows="2"></textarea></div>
     
-    <button type="button" class="btn-extras" style="background:#3182ce; color:white;" onclick="toggleExtras()">Exibir Campos Extras</button>
-    <div id="secao-extras">
-        <div class="campo"><label>Valor Creditado (R$)</label><input type="number" step="0.01" id="valor_creditado"></div>
-        <div class="campo"><label>Data Crédito</label><input type="date" id="data_credito"></div>
-        <div class="campo"><label>Valor Comissão (R$)</label><input type="number" step="0.01" id="valor_comissao"></div>
-        <div class="campo"><label>Data Comissão</label><input type="date" id="data_comissao"></div>
-    </div>
-    
+        
     <button id="btn-salvar" class="btn-salvar" onclick="salvarFinal()">Salvar Reserva</button>
     <button class="btn-limpar" style="display:block" onclick="resetarFormulario()">Novo (Limpar)</button>
     <button id="btn-excluir" class="btn-excluir" onclick="confirmarExclusao()">Excluir Permanente</button>
@@ -397,7 +390,30 @@
         const proximo = numeros.length > 0 ? Math.max(...numeros) + 1 : 1;
         ayrtonField.value = proximo;
     }
+	// --- FUNÇÕES DE ACESSO E LOGIN (Recuperadas) ---
+    async function realizarLogin() {
+        const u = document.getElementById('login_user').value.trim();
+        const s = document.getElementById('login_pass').value.trim();
+        
+        if(!u || !s) { alert("Preencha usuário e senha"); return; }
 
+        const { data, error } = await supabaseClient.from('usuarios').select('*').eq('usuario', u).eq('senha', s).single();
+        
+        if (error || !data) {
+            alert("Usuário ou senha incorretos.");
+            return;
+        }
+
+        sessionStorage.setItem('point_user', JSON.stringify(data));
+        location.reload(); 
+    }
+
+    function logout() { 
+        sessionStorage.clear(); 
+        location.reload(); 
+    }
+
+    
     window.onload = () => {
         const focusMonth = sessionStorage.getItem('mapFocusMonth');
         if(focusMonth) {
@@ -405,60 +421,84 @@
             mesBase.setDate(1);
             sessionStorage.removeItem('mapFocusMonth');
         }
-        if (!userLogado) document.getElementById('tela-login').style.display = 'flex';
-        else { document.getElementById('nome-logado').innerText = userLogado.usuario; init(); }
-    };
-
-    async function realizarLogin() {
-        const u = document.getElementById('login_user').value.trim();
-        const s = document.getElementById('login_pass').value.trim();
-        const { data } = await supabaseClient.from('usuarios').select('*').eq('usuario', u).eq('senha', s).single();
-        if (data) { 
-            userLogado = data; 
-            sessionStorage.setItem('point_user', JSON.stringify(data)); 
-            location.reload(); 
+        
+        if (!userLogado) {
+            document.getElementById('tela-login').style.display = 'flex';
+        } else {
+            // Garante que o nome apareça
+            const campoNome = document.getElementById('nome-logado');
+            if(campoNome) campoNome.innerText = userLogado.usuario;
+            init();
         }
-        else mostrarModal('modalErro', 'Usuário ou senha incorretos.');
-    }
-
-    function logout() { sessionStorage.clear(); location.reload(); }
+    };
 
     async function init() {
         const { data: aptos } = await supabaseClient.from('apartamentos').select('*').order('nome_apto');
         aptosGlobais = aptos || [];
         const select = document.getElementById('apto_id');
-        select.innerHTML = '<option value="">Selecione...</option>';
-        aptosGlobais.forEach(a => select.innerHTML += `<option value="${a.id}">${a.nome_apto}</option>`);
+        if(select) {
+            select.innerHTML = '<option value="">Selecione...</option>';
+            aptosGlobais.forEach(a => select.innerHTML += `<option value="${a.id}">${a.nome_apto}</option>`);
+        }
         
         const { data: config } = await supabaseClient.from('configuracoes').select('valor').eq('chave', 'minimo_noites_alerta').single();
         if (config) minNoites = parseInt(config.valor);
         
-        aplicarPermissoes(); // Nova função de segurança
+        aplicarPermissoes(); 
         renderizarMapaTriplo();
     }
 
     function aplicarPermissoes() {
-        const nivel = userLogado.nivel;
+        if (!userLogado) return;
+        const nivel = userLogado.nivel || 'Leitura'; // Se não encontrar o nível, assume o mais restrito
         const sidebar = document.querySelector('.sidebar');
         
-        // Se for Leitura, remove o menu lateral completamente
-        if (nivel === 'Leitura') {
+        // 1. Controle da Barra Lateral e Botão Sair para Leitura
+        if (nivel === 'Leitura' && sidebar) {
             sidebar.style.display = 'none';
+            
+            // Adiciona um botão SAIR no topo direito para quem não tem menu lateral
+            const controlesDireita = document.querySelector('.controles-direita');
+            if (controlesDireita && !document.getElementById('btn-sair-leitura')) {
+                const btnSairLeitura = document.createElement('button');
+                btnSairLeitura.id = 'btn-sair-leitura';
+                btnSairLeitura.className = 'btn-nav';
+                btnSairLeitura.style.background = '#e53e3e';
+                btnSairLeitura.style.color = 'white';
+                btnSairLeitura.innerText = 'SAIR';
+                btnSairLeitura.onclick = logout;
+                controlesDireita.appendChild(btnSairLeitura);
+            }
         }
 
-        // Esconde botões do menu superior para Usuário e Leitura
+        // 2. Controle dos Botões Superiores
         if (nivel === 'Usuário' || nivel === 'Leitura') {
-            // Esconde: Lista, Conferência, Relatórios e Faxina
-            document.querySelector('.btn-lista').style.display = 'none';
-            document.querySelector('button[onclick="abrirConferencia()"]').style.display = 'none';
-            document.querySelector('button[onclick="abrirRelatorioPagos()"]').style.display = 'none';
-            document.querySelector('button[onclick="abrirModalEscolhaFaxina()"]').style.display = 'none';
+            const btnLista = document.querySelector('.btn-lista');
+            if(btnLista) btnLista.style.display = 'none';
+            
+            const btnConf = document.querySelector('button[onclick="abrirConferencia()"]');
+            if(btnConf) btnConf.style.display = 'none';
+            
+            const btnPagos = document.querySelector('button[onclick="abrirRelatorioPagos()"]');
+            if(btnPagos) btnPagos.style.display = 'none';
+            
+            const btnFaxina = document.querySelector('button[onclick="abrirModalEscolhaFaxina()"]');
+            if(btnFaxina) btnFaxina.style.display = 'none';
         }
         
-        // Se for Master, adiciona um botão para gerenciar usuários (opcional)
+        // 3. Botão do Master (Roxo)
         if (nivel === 'Master') {
             const controles = document.querySelector('.controles-esquerda');
-            controles.innerHTML +=<button class="btn-nav" style="background:#805ad5; color:white;" onclick="abrirGerenciamentoUsuarios()">⚙️ Níveis de Acesso</button>;
+            if (controles && !document.getElementById('btn-gestao-usuarios')) {
+                const btnMaster = document.createElement('button');
+                btnMaster.id = 'btn-gestao-usuarios';
+                btnMaster.className = 'btn-nav';
+                btnMaster.style.background = '#805ad5';
+                btnMaster.style.color = 'white';
+                btnMaster.innerText = '⚙️ Níveis de Acesso';
+                btnMaster.onclick = abrirGerenciamentoUsuarios;
+                controles.appendChild(btnMaster);
+            }
         }
     }
 
