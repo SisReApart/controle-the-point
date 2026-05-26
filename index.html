@@ -7,7 +7,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --cor-p: #4299e1; --cor-d: #fff700; --cor-vinho: #800020; --cor-borda: #ddd; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; overflow: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; overflow: hidden; } 
+		/* Ajuste para quando a sidebar some */
+        body:has(.sidebar[style*="display: none"]) .main-content {
+            width: 100vw;
+            flex: none;
+        }
         
         /* LOGIN */
         #tela-login { position: fixed; top:0; left:0; width:100%; height:100%; background:#2d3748; z-index:9999; display:none; justify-content:center; align-items:center; }
@@ -138,7 +143,7 @@
                 width: 100%;
             }
 
-            .sidebar, .topo-controles, .modal-overlay, #tela-login, #alerta-sequencia { display: none !important; }
+            body > *:not(#area-impressao) { display: none !important; }
         }
     </style>
 </head>
@@ -323,6 +328,27 @@
         <div id="total-pagos" class="resumo-pagos">Total Recebido no Mês: R$ 0,00</div>
     </div>
 </div>
+<!-- MODAL GERENCIAMENTO DE USUÁRIOS (SÓ MASTER) -->
+<div id="modalUsuarios" class="modal-overlay">
+    <div class="modal-box" style="max-width: 600px;">
+        <div class="header-hist">
+            <h3>Gerenciar Usuários e Permissões</h3>
+            <button class="btn-modal" style="background:#e53e3e; color:white;" onclick="fecharModais()">FECHAR</button>
+        </div>
+        <table class="tab-hist">
+            <thead>
+                <tr>
+                    <th>Usuário</th>
+                    <th>Senha</th>
+                    <th>Nível de Acesso</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody id="corpo-usuarios-gestao"></tbody>
+        </table>
+        <p style="font-size: 10px; color: #666; margin-top: 10px;">* Alterações de nível exigem que o usuário saia e entre novamente para surtir efeito.</p>
+    </div>
+</div>
 
 <script>
     const SB_URL = "https://eqoayyftpddombylgxpw.supabase.co";
@@ -387,7 +413,11 @@
         const u = document.getElementById('login_user').value.trim();
         const s = document.getElementById('login_pass').value.trim();
         const { data } = await supabaseClient.from('usuarios').select('*').eq('usuario', u).eq('senha', s).single();
-        if (data) { userLogado = data; sessionStorage.setItem('point_user', JSON.stringify(data)); location.reload(); }
+        if (data) { 
+            userLogado = data; 
+            sessionStorage.setItem('point_user', JSON.stringify(data)); 
+            location.reload(); 
+        }
         else mostrarModal('modalErro', 'Usuário ou senha incorretos.');
     }
 
@@ -403,7 +433,33 @@
         const { data: config } = await supabaseClient.from('configuracoes').select('valor').eq('chave', 'minimo_noites_alerta').single();
         if (config) minNoites = parseInt(config.valor);
         
+        aplicarPermissoes(); // Nova função de segurança
         renderizarMapaTriplo();
+    }
+
+    function aplicarPermissoes() {
+        const nivel = userLogado.nivel;
+        const sidebar = document.querySelector('.sidebar');
+        
+        // Se for Leitura, remove o menu lateral completamente
+        if (nivel === 'Leitura') {
+            sidebar.style.display = 'none';
+        }
+
+        // Esconde botões do menu superior para Usuário e Leitura
+        if (nivel === 'Usuário' || nivel === 'Leitura') {
+            // Esconde: Lista, Conferência, Relatórios e Faxina
+            document.querySelector('.btn-lista').style.display = 'none';
+            document.querySelector('button[onclick="abrirConferencia()"]').style.display = 'none';
+            document.querySelector('button[onclick="abrirRelatorioPagos()"]').style.display = 'none';
+            document.querySelector('button[onclick="abrirModalEscolhaFaxina()"]').style.display = 'none';
+        }
+        
+        // Se for Master, adiciona um botão para gerenciar usuários (opcional)
+        if (nivel === 'Master') {
+            const controles = document.querySelector('.controles-esquerda');
+            controles.innerHTML +=<button class="btn-nav" style="background:#805ad5; color:white;" onclick="abrirGerenciamentoUsuarios()">⚙️ Níveis de Acesso</button>;
+        }
     }
 
     async function renderizarMapaTriplo() {
@@ -420,6 +476,18 @@
         }
         // Reposicionar destaque se houver busca ativa
         if(indiceBusca >= 0) aplicarDestaqueBusca();
+
+        // Verifica se há uma reserva recém-salva para destacar
+        const highlightId = sessionStorage.getItem('highlightReservaId');
+        if (highlightId) {
+            const celula = document.getElementById(`cell-${highlightId}`);
+            if (celula) {
+                celula.classList.add('highlight-search');
+                celula.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            // Limpa da memória para não ficar piscando sempre que atualizar a página
+            sessionStorage.removeItem('highlightReservaId');
+        }
     }
 
     function verificarSequenciaAyrton() {
@@ -468,7 +536,7 @@
                 const saindoH = reservas.find(r => r.apto_id === apto.id && fmt(r.data_checkout) === dIso);
                 const entrandoH = reservas.find(r => r.apto_id === apto.id && fmt(r.data_checkin) === dIso);
                 if (saindoH && entrandoH) {
-                    html += `<td class="reserva-vinho" onclick="prepararEdicao('${entrandoH.id}')"></td>`;
+                    html += `<td id="cell-${entrandoH.id}" class="reserva-vinho" onclick="prepararEdicao('${entrandoH.id}')"></td>`;
                 } else {
                     const resA = reservas.find(r => r.apto_id === apto.id && dIso >= fmt(r.data_checkin) && dIso <= fmt(r.data_checkout));
                     if (resA && (dIso === fmt(resA.data_checkin) || d === 1 || (saindoH === undefined && dIso > fmt(resA.data_checkin)))) {
@@ -485,7 +553,7 @@
                                 dur++; tempD++;
                             }
                             const cod = {'Booking':'B','AirBnb':'A','VRBO':'V','D':'D','P':'P'}[resA.origem] || "R";
-                            html += `<td colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal}</td>`;
+                            html += `<td id="cell-${resA.id}" colspan="${dur}" class="${(resA.origem === 'P') ? 'reserva-p' : 'reserva-d'}" onclick="prepararEdicao('${resA.id}')">${cod} - ${resA.guest_principal}</td>`;
                             d += (dur - 1);
                         } else html += `<td></td>`;
                     } else html += `<td></td>`;
@@ -563,7 +631,8 @@
     }
 
     function limparDestaques() {
-        document.querySelectorAll('.cell-reserva, .reserva-vinho').forEach(el => el.classList.remove('highlight-search'));
+        // Remove o efeito de piscar de qualquer reserva (P, D ou Vinho)
+        document.querySelectorAll('.reserva-p, .reserva-d, .reserva-vinho').forEach(el => el.classList.remove('highlight-search'));
     }
 
     // HISTÓRICO LÓGICA
@@ -635,20 +704,44 @@
 
     async function salvarFinal() {
         const cin = document.getElementById('data_checkin').value;
+        // Guarda o mês para focar ao recarregar
         sessionStorage.setItem('mapFocusMonth', cin);
+        
         const idVal = document.getElementById('edit_id').value;
         const r = {
-            apto_id: document.getElementById('apto_id').value, guest_principal: document.getElementById('guest_principal').value,
-            data_checkin: cin || null, data_checkout: document.getElementById('data_checkout').value || null,
-            origem: document.getElementById('origem').value, noites: document.getElementById('noites').value, invoice_id: document.getElementById('invoice_id').value,
-            ayrton_reserva_id: document.getElementById('ayrton_reserva_id').value, num_adultos: document.getElementById('num_adultos').value,
-            cancelada: document.getElementById('cancelada').checked, valor_creditado: document.getElementById('valor_creditado').value || 0,
-            data_credito: document.getElementById('data_credito').value || null, valor_comissao: document.getElementById('valor_comissao').value || 0,
-            data_comissao: document.getElementById('data_comissao').value || null, usuario_alterou: userLogado.usuario, data_alteracao: new Date().toISOString(),
+            apto_id: document.getElementById('apto_id').value, 
+            guest_principal: document.getElementById('guest_principal').value,
+            data_checkin: cin || null, 
+            data_checkout: document.getElementById('data_checkout').value || null,
+            origem: document.getElementById('origem').value, 
+            noites: document.getElementById('noites').value, 
+            invoice_id: document.getElementById('invoice_id').value,
+            ayrton_reserva_id: document.getElementById('ayrton_reserva_id').value, 
+            num_adultos: document.getElementById('num_adultos').value,
+            cancelada: document.getElementById('cancelada').checked, 
+            valor_creditado: document.getElementById('valor_creditado').value || 0,
+            data_credito: document.getElementById('data_credito').value || null, 
+            valor_comissao: document.getElementById('valor_comissao').value || 0,
+            data_comissao: document.getElementById('data_comissao').value || null, 
+            usuario_alterou: userLogado.usuario, 
+            data_alteracao: new Date().toISOString(),
             observacoes: document.getElementById('observacoes').value
         };
-        if (idVal) await supabaseClient.from('reservas').update(r).eq('id', idVal);
-        else await supabaseClient.from('reservas').insert([r]);
+
+        let targetId = idVal;
+
+        if (idVal) {
+            // Se for edição, já temos o ID
+            await supabaseClient.from('reservas').update(r).eq('id', idVal);
+        } else {
+            // Se for nova, pegamos o ID gerado pelo banco
+            const { data } = await supabaseClient.from('reservas').insert([r]).select();
+            if (data && data.length > 0) targetId = data[0].id;
+        }
+        
+        // Guarda o ID para fazer piscar após o reload
+        if (targetId) sessionStorage.setItem('highlightReservaId', targetId);
+        
         location.reload();
     }
 
@@ -726,6 +819,12 @@
             area.appendChild(folha);
         }
         window.print();
+
+        // Comando para forçar o menu superior e lateral a voltarem
+        setTimeout(() => {
+            document.getElementById('area-impressao').innerHTML = "";
+            window.dispatchEvent(new Event('resize'));
+        }, 500);
     }
 
     function gerarRelatorioFaxinaFinal() {
@@ -880,6 +979,43 @@ function renderRelatorioPagos() {
     }
 }
 
+	// ABRE A JANELA DE USUÁRIOS E BUSCA OS DADOS
+async function abrirGerenciamentoUsuarios() {
+    document.getElementById('modalUsuarios').style.display = 'flex';
+    const { data: lista } = await supabaseClient.from('usuarios').select('*').order('usuario');
+    const corpo = document.getElementById('corpo-usuarios-gestao');
+    corpo.innerHTML = "";
+
+    lista.forEach(u => {
+        corpo.innerHTML += `
+            <tr>
+                <td>${u.usuario}</td>
+                <td><input type="text" class="input-conf" id="user-pass-${u.id}" value="${u.senha}" style="width: 80px;"></td>
+                <td>
+                    <select id="user-nivel-${u.id}" class="input-conf">
+                        <option value="Master" ${u.nivel === 'Master' ? 'selected' : ''}>Master</option>
+                        <option value="Usuário" ${u.nivel === 'Usuário' ? 'selected' : ''}>Usuário</option>
+                        <option value="Leitura" ${u.nivel === 'Leitura' ? 'selected' : ''}>Leitura</option>
+                    </select>
+                </td>
+                <td><button class="btn-baixar" onclick="salvarAlteracaoUsuario('${u.id}')">SALVAR</button></td>
+            </tr>`;
+    });
+}
+
+// SALVA A ALTERAÇÃO NO BANCO DE DADOS
+async function salvarAlteracaoUsuario(id) {
+    const novaSenha = document.getElementById(`user-pass-${id}`).value;
+    const novoNivel = document.getElementById(`user-nivel-${id}`).value;
+
+    const { error } = await supabaseClient.from('usuarios').update({ 
+        senha: novaSenha, 
+        nivel: novoNivel 
+    }).eq('id', id);
+
+    if (error) alert("Erro ao atualizar: " + error.message);
+    else alert("Usuário atualizado com sucesso!");
+}
 	
 </script>
 </body>
