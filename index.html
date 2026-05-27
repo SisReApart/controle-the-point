@@ -1087,65 +1087,69 @@ async function salvarAlteracaoUsuario(id) {
 }
 	
 	async function abrirModuloEmail() {
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
+		const hoje = new Date();
+		hoje.setHours(0, 0, 0, 0);
     
-    // Calcula o último dia do próximo mês
-    const fimProxMes = new Date(hoje.getFullYear(), hoje.getMonth() + 2, 0);
-    fimProxMes.setHours(23, 59, 59, 999);
+		const fimProxMes = new Date(hoje.getFullYear(), hoje.getMonth() + 2, 0);
+		fimProxMes.setHours(23, 59, 59, 999);
 
-    // Filtra reservas: Ativas E (Check-out >= hoje) E (Check-in <= fim do próximo mês)
-    let filtradas = reservasGlobais.filter(r => {
-        const dIn = new Date(r.data_checkin + "T12:00:00");
-        const dOut = new Date(r.data_checkout + "T12:00:00");
-        return !r.cancelada && dOut >= hoje && dIn <= fimProxMes;
-    });
+		let filtradas = reservasGlobais.filter(r => {
+			const dIn = new Date(r.data_checkin + "T12:00:00");
+			const dOut = new Date(r.data_checkout + "T12:00:00");
+			return !r.cancelada && dOut >= hoje && dIn <= fimProxMes;
+		});
 
-    // Ordenação: Primeiro pelo nome do Apto, depois pelo Check-in
-    filtradas.sort((a, b) => {
-        const aptoA = aptosGlobais.find(ap => ap.id === a.apto_id)?.nome_apto || "";
-        const aptoB = aptosGlobais.find(ap => ap.id === b.apto_id)?.nome_apto || "";
-        if (aptoA !== aptoB) return aptoA.localeCompare(aptoB);
-        return new Date(a.data_checkin) - new Date(b.data_checkin);
-    });
+		filtradas.sort((a, b) => {
+			const aptoA = aptosGlobais.find(ap => ap.id === a.apto_id)?.nome_apto || "";
+			const aptoB = aptosGlobais.find(ap => ap.id === b.apto_id)?.nome_apto || "";
+			if (aptoA !== aptoB) return aptoA.localeCompare(aptoB);
+			return new Date(a.data_checkin) - new Date(b.data_checkin);
+		});
 
-    // Monta o texto do relatório
-    let corpoTexto = `RELATÓRIO DE RESERVAS - THE POINT\n`;
-    corpoTexto += `Período: ${hoje.toLocaleDateString('pt-BR')} até ${fimProxMes.toLocaleDateString('pt-BR')}\n`;
-    corpoTexto += `--------------------------------------------------\n\n`;
+		// --- MONTAGEM DO TEXTO COM A NOVA MENSAGEM ---
+		let corpoTexto = `RELATÓRIO DE RESERVAS - THE POINT\n`;
+		corpoTexto += `Período: ${hoje.toLocaleDateString('pt-BR')} até ${fimProxMes.toLocaleDateString('pt-BR')}\n\n`;
+		corpoTexto += `Good afternoon!\n`;
+		corpoTexto += `Below is a list of apartments owned by OTO Service Investments that will be hosting guests over the coming days and through the end of next month.\n\n`;
+		corpoTexto += `Sincerely,\n`;
+		corpoTexto += `Ronaldo Esteves\n`;
+		corpoTexto += `407 948-2040\n`;
+		corpoTexto += `--------------------------------------------------\n\n`;
 
-    let aptoAtual = "";
-    filtradas.forEach(r => {
-        const aptoNome = aptosGlobais.find(ap => ap.id === r.apto_id)?.nome_apto || "N/A";
-        
-        // Adiciona separador visual se mudar o apartamento
-        if (aptoNome !== aptoAtual) {
-            corpoTexto += `\nAPARTAMENTO: ${aptoNome}\n`;
-            corpoTexto += `--------------------------------------------------\n`;
-            aptoAtual = aptoNome;
-        }
+		let aptoAtual = "";
+		filtradas.forEach(r => {
+			const aptoNome = aptosGlobais.find(ap => ap.id === r.apto_id)?.nome_apto || "N/A";
+			if (aptoNome !== aptoAtual) {
+				corpoTexto += `\nAPARTAMENTO: ${aptoNome}\n`;
+				corpoTexto += `--------------------------------------------------\n`;
+				aptoAtual = aptoNome;
+			}
+			const dInFmt = new Date(r.data_checkin + "T12:00:00").toLocaleDateString('pt-BR');
+			const dOutFmt = new Date(r.data_checkout + "T12:00:00").toLocaleDateString('pt-BR');
+			corpoTexto += `${dInFmt} a ${dOutFmt} - ${r.guest_principal}\n`;
+		});
 
-        const dInFmt = new Date(r.data_checkin + "T12:00:00").toLocaleDateString('pt-BR');
-        const dOutFmt = new Date(r.data_checkout + "T12:00:00").toLocaleDateString('pt-BR');
-        
-        corpoTexto += `${dInFmt} a ${dOutFmt} - ${r.guest_principal}\n`;
-    });
+		document.getElementById('preview-email').innerText = corpoTexto;
+		document.getElementById('modalEmail').style.display = 'flex';
+	}
 
-    document.getElementById('preview-email').innerText = corpoTexto;
-    document.getElementById('modalEmail').style.display = 'flex';
-}
+	function dispararEmail() {
+		const destinatario = "edgehospitality@outlook.com";
+		// Incluído o novo e-mail da Tiffany na lista de cópia (CC)
+		const cc = "Simone@edgehm.com, reservas@orlandoticketsonline.com, tiffany@optimumcommunity.com";
+		const assunto = "Relatório de Reservas Atualizado - The Point";
+		const corpo = document.getElementById('preview-email').innerText;
 
-function dispararEmail() {
-    const destinatario = "edgehospitality@outlook.com";
-    const cc = "Simone@edgehm.com; reservas@orlandoticketsonline.com";
-    const assunto = "Relatório de Reservas Atualizado - The Point";
-    const corpo = document.getElementById('preview-email').innerText;
-
-    // Codifica o texto para formato de URL de e-mail
-    const mailtoLink = `mailto:${destinatario}?cc=${cc}&subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+		// --- LINK ESPECÍFICO PARA GMAIL WEB ---
+		// Isso abrirá o Gmail diretamente no seu navegador
+		const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1` +
+                      `&to=${destinatario}` +
+                      `&cc=${cc}` +
+                      `&su=${encodeURIComponent(assunto)}` +
+                      `&body=${encodeURIComponent(corpo)}`;
     
-    window.location.href = mailtoLink;
-}
+		window.open(gmailLink, '_blank');
+	}
 	
 </script>
 </body>
