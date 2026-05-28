@@ -113,8 +113,10 @@
                 border: 1px solid black !important; 
                 height: 18px !important; 
                 line-height: 18px !important; 
-                font-size: 8px !important; 
+                font-size: 8.5px !important; /* Aumentado levemente para clareza */
                 color: black !important;
+                font-family: 'Calibri', 'Segoe UI', Arial, sans-serif !important;
+                -webkit-font-smoothing: antialiased; /* Melhora a nitidez */
             }
 
             /* Cores dos cabeçalhos solicitadas */
@@ -124,8 +126,15 @@
             /* Título do mês dentro da tabela */
             .print-month-name { font-size: 10px !important; font-weight: bold !important; text-transform: uppercase; }
 
-            /* Nome do Apto maior */
-            .mes-print .col-apto { font-size: 11px !important; font-weight: 900 !important; width: 140px !important; text-align: left !important; padding-left: 4px !important; }
+            /* Nome do Apto maior e mais nítido */
+            .mes-print .col-apto { 
+                font-size: 11px !important; 
+                font-weight: bold !important; 
+                width: 140px !important; 
+                text-align: left !important; 
+                padding-left: 4px !important; 
+                font-family: 'Calibri', 'Segoe UI', Arial, sans-serif !important;
+            }
 
             /* Esconder título original que ficava fora da tabela */
             .mes-print .titulo-mes-tabela { display: none !important; }
@@ -138,7 +147,7 @@
                 margin-top: auto;
                 padding-top: 5px;
                 font-size: 10px !important;
-                font-family: Arial, sans-serif;
+                font-family: 'Calibri', Arial, sans-serif;
                 border-top: 1px solid black;
                 width: 100%;
             }
@@ -413,13 +422,20 @@
         
         if(!u || !s) { alert("Preencha usuário e senha"); return; }
 
-        const { data, error } = await supabaseClient.from('usuarios').select('*').eq('usuario', u).eq('senha', s).single();
+        // Busca o usuário. Como o RLS agora está ativo, essa busca é validada pelo banco.
+        const { data, error } = await supabaseClient
+            .from('usuarios')
+            .select('*')
+            .eq('usuario', u)
+            .eq('senha', s)
+            .single();
         
         if (error || !data) {
-            alert("Usuário ou senha incorretos.");
+            alert("Acesso negado. Verifique suas credenciais.");
             return;
         }
 
+        // Sucesso no login
         sessionStorage.setItem('point_user', JSON.stringify(data));
         location.reload(); 
     }
@@ -1136,8 +1152,8 @@ async function salvarAlteracaoUsuario(id) {
 	function dispararEmail() {
 		const destinatario = "edgehospitality@outlook.com";
 		// Incluído o novo e-mail da Tiffany na lista de cópia (CC)
-		const cc = "Simone@edgehm.com, reservas@orlandoticketsonline.com, tiffany@optimumcommunity.com";
-		const assunto = "Relatório de Reservas Atualizado - The Point";
+		const cc = "Simone@edgehm.com, reservas@orlandoticketsonline.com.br, tiffany@optimumcommunity.com";
+		const assunto = "OTO Service Investments - Reservas Atualizadas no The Point";
 		const corpo = document.getElementById('preview-email').innerText;
 
 		// --- LINK ESPECÍFICO PARA GMAIL WEB ---
