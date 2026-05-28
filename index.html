@@ -91,45 +91,43 @@
 
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            @page { size: letter landscape; margin: 0.2in; }
+            @page { size: letter landscape; margin: 0.3in; }
             body * { visibility: hidden; }
             #area-impressao, #area-impressao * { visibility: visible; }
             #area-impressao { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; }
             
             .print-landscape { 
                 page-break-after: always; 
+                position: relative; /* Necessário para o rodapé fixo */
                 width: 100%; 
-                display: flex; 
-                flex-direction: column; 
-                height: 98vh; 
-                position: relative;
+                height: 7.7in; /* Altura segura para Landscape no papel Letter */
+                display: block;
             }
+
+            /* Evita página em branco no final */
+            .print-landscape:last-child { page-break-after: auto !important; }
 
             .mes-print { margin-bottom: 2px !important; border: 1px solid black !important; padding: 0 !important; }
             .mes-print table { border-collapse: collapse !important; width: 100% !important; border: 1px solid black !important; }
             
-            /* Bordas Pretas e Fonte Calibri para clareza */
+            /* Ajuste de altura para garantir que 5 meses caibam com folga */
             .mes-print th, .mes-print td { 
                 border: 1px solid black !important; 
-                height: 18px !important; 
-                line-height: 18px !important; 
+                height: 17px !important; 
+                line-height: 17px !important; 
                 font-size: 8.5px !important; 
                 color: black !important;
                 font-family: 'Calibri', 'Segoe UI', Arial, sans-serif !important;
                 -webkit-font-smoothing: antialiased;
             }
 
-            /* REMOVE O NEGRITO DOS NOMES DAS RESERVAS NA IMPRESSÃO */
-            .mes-print .reserva-p, .mes-print .reserva-d { 
-                font-weight: normal !important; 
-            }
+            .mes-print .reserva-p, .mes-print .reserva-d { font-weight: normal !important; }
 
             .mes-print .cabecalho-dias { background: #eeeeee !important; } 
             .mes-print .cabecalho-semana { background: #ffffff !important; } 
             
             .print-month-name { font-size: 10px !important; font-weight: bold !important; text-transform: uppercase; }
 
-            /* Nome do Apto continua em negrito para destaque */
             .mes-print .col-apto { 
                 font-size: 11px !important; 
                 font-weight: bold !important; 
@@ -141,16 +139,20 @@
 
             .mes-print .titulo-mes-tabela { display: none !important; }
 
+            /* RODAPÉ FIXADO NO FINAL DA PÁGINA */
             .footer-print {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
                 display: flex !important;
                 justify-content: space-between;
                 align-items: center;
-                margin-top: auto;
-                padding-top: 5px;
-                font-size: 10px !important;
+                padding-top: 3px;
+                font-size: 9px !important;
                 font-family: 'Calibri', Arial, sans-serif;
                 border-top: 1px solid black;
-                width: 100%;
+                background: white;
             }
 
             body > *:not(#area-impressao) { display: none !important; }
