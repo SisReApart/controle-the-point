@@ -232,10 +232,11 @@
     <div id="alerta-sequencia"></div>
     <div class="topo-controles">
         <div class="controles-esquerda">
-            <button class="btn-nav btn-lista" onclick="abrirHistorico()">📋 Ver Lista/Histórico</button>
-			<button class="btn-nav" style="background: #3182ce; color: white; border: none;" onclick="abrirConferencia()">💰 Conferência Booking/Chase</button>
-			<button class="btn-nav" style="background: #2d3748; color: white; border: none;" onclick="abrirRelatorioPagos()">📊 Relatório de Pagos (Mês)</button>
-            <button class="btn-nav" onclick="imprimirMapa4Meses()">🖨️ Mapa</button>
+            <button class="btn-nav btn-lista" onclick="abrirHistorico()">📋 Histórico</button>
+            <button class="btn-nav" style="background: #3182ce; color: white; border: none;" onclick="abrirConferencia()">💰 Booking Conciliação</button>
+            <button class="btn-nav" style="background: #2d3748; color: white; border: none;" onclick="abrirRelatorioPagos()">📊 Booking Pagos</button>
+            <button class="btn-nav" onclick="imprimirMapa4Meses()">🖨️ Mapa View</button>
+            <button class="btn-nav" id="btn-mapa-enviar" onclick="alert('Função em desenvolvimento')">🖨️ Mapa Enviar</button>
             <button class="btn-nav" onclick="abrirModalEscolhaFaxina()">🧹 Faxina</button>
         </div>
 
@@ -530,7 +531,7 @@
                 btnEmail.className = 'btn-nav';
                 btnEmail.style.background = '#2c3e50';
                 btnEmail.style.color = 'white';
-                btnEmail.innerText = '📧 Gerar E-mail';
+                btnEmail.innerText = '📧 The Point Enviar';
                 btnEmail.onclick = abrirModuloEmail;
                 controles.appendChild(btnEmail);
             }
