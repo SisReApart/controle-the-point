@@ -1175,52 +1175,33 @@ async function salvarAlteracaoUsuario(id) {
 async function abrirModuloMapaEmail() {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
+    const areaPreview = document.getElementById('preview-email');
+    areaPreview.innerHTML = ""; // Limpa o que tinha antes
+
+    // Cria um container para as tabelas que vamos copiar
+    const containerTabelas = document.createElement('div');
+    containerTabelas.id = "tabelas-para-copiar";
+    containerTabelas.style.background = "white";
+    containerTabelas.style.padding = "10px";
+
+    const ativas = reservasGlobais.filter(r => !r.cancelada);
+
+    // Gera os 5 meses de tabelas (Exatamente como o Mapa View)
+    for (let i = 0; i < 5; i++) {
+        const df = new Date(hoje.getFullYear(), hoje.getMonth() + i, 1);
+        const tabelaMes = criarTabelaMes(df, ativas, false); // Usamos o modelo visual do mapa
+        
+        // Ajuste visual para caber bem no e-mail
+        tabelaMes.style.marginBottom = "20px";
+        tabelaMes.style.border = "1px solid #000";
+        containerTabelas.appendChild(tabelaMes);
+    }
+
+    areaPreview.appendChild(containerTabelas);
     
-    // Calcula o fim de 5 meses à frente (para bater com o Mapa View)
-    const dataFimMapa = new Date(hoje.getFullYear(), hoje.getMonth() + 5, 0);
-    dataFimMapa.setHours(23, 59, 59, 999);
-
-    let filtradas = reservasGlobais.filter(r => {
-        const dIn = new Date(r.data_checkin + "T12:00:00");
-        const dOut = new Date(r.data_checkout + "T12:00:00");
-        return !r.cancelada && dOut >= hoje && dIn <= dataFimMapa;
-    });
-
-    // Ordenação por Apartamento e depois Check-in
-    filtradas.sort((a, b) => {
-        const aptoA = aptosGlobais.find(ap => ap.id === a.apto_id)?.nome_apto || "";
-        const aptoB = aptosGlobais.find(ap => ap.id === b.apto_id)?.nome_apto || "";
-        if (aptoA !== aptoB) return aptoA.localeCompare(aptoB);
-        return new Date(a.data_checkin) - new Date(b.data_checkin);
-    });
-
-    let corpoTexto = `FULL MAP REPORT (5 MONTHS) - THE POINT\n`;
-    corpoTexto += `Period: ${hoje.toLocaleDateString('pt-BR')} to ${dataFimMapa.toLocaleDateString('pt-BR')}\n\n`;
-    corpoTexto += `Good afternoon!\n`;
-    corpoTexto += `Attached below is the full 5-month booking schedule for OTO Service Investments apartments.\n\n`;
-    corpoTexto += `Sincerely,\n`;
-    corpoTexto += `Ronaldo Esteves\n`;
-    corpoTexto += `407 948-2040\n`;
-    corpoTexto += `--------------------------------------------------\n`;
-
-    let aptoAtual = "";
-    filtradas.forEach(r => {
-        const aptoNome = aptosGlobais.find(ap => ap.id === r.apto_id)?.nome_apto || "N/A";
-        if (aptoNome !== aptoAtual) {
-            corpoTexto += `\nAPARTAMENTO: ${aptoNome}\n`;
-            corpoTexto += `--------------------------------------------------\n`;
-            aptoAtual = aptoNome;
-        }
-        const dInFmt = new Date(r.data_checkin + "T12:00:00").toLocaleDateString('pt-BR');
-        const dOutFmt = new Date(r.data_checkout + "T12:00:00").toLocaleDateString('pt-BR');
-        corpoTexto += `${dInFmt} to ${dOutFmt} - ${r.guest_principal} - 3Adt\n`;
-    });
-
-    // Reutiliza o modal de e-mail para mostrar o preview
-    document.getElementById('preview-email').innerText = corpoTexto;
-    
-    // Ajusta o botão de envio do modal para usar a função específica do Mapa
+    // Ajusta o botão do modal
     const btnEnviar = document.querySelector('#modalEmail .btn-salvar');
+    btnEnviar.innerHTML = "📋 COPIAR MAPA E ABRIR GMAIL";
     btnEnviar.onclick = dispararEmailMapa;
     
     document.getElementById('modalEmail').style.display = 'flex';
@@ -1228,14 +1209,26 @@ async function abrirModuloMapaEmail() {
 
 // FUNÇÃO PARA DISPARAR PARA O GMAIL (DESTINATÁRIO ESPECÍFICO)
 function dispararEmailMapa() {
-    const destinatario = "reservas@orlandoticketsonline.com.br";
-    const assunto = "OTO Service Investments - Full 5-Month Map Report";
-    const corpo = document.getElementById('preview-email').innerText;
+    // 1. Seleciona e Copia o Mapa Visual
+    const div = document.getElementById('tabelas-para-copiar');
+    const range = document.createRange();
+    range.selectNode(div);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    
+    try {
+        document.execCommand('copy');
+        alert("Mapa visual copiado! Agora, no Gmail, basta clicar no corpo da mensagem e apertar Ctrl+V para colar o mapa colorido.");
+    } catch (err) {
+        alert("Erro ao copiar automaticamente. Por favor, selecione o mapa e use Ctrl+C.");
+    }
+    
+    window.getSelection().removeAllRanges();
 
-    const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1` +
-                      `&to=${destinatario}` +
-                      `&su=${encodeURIComponent(assunto)}` +
-                      `&body=${encodeURIComponent(corpo)}`;
+    // 2. Abre o Gmail com o destinatário e assunto corretos
+    const destinatario = "mcoservices@aol.com";
+    const assunto = "OTO Service Investments - Full 5-Month Map Report";
+    const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${destinatario}&su=${encodeURIComponent(assunto)}`;
     
     window.open(gmailLink, '_blank');
 }
