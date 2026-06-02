@@ -1176,32 +1176,50 @@ async function abrirModuloMapaEmail() {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     const areaPreview = document.getElementById('preview-email');
-    areaPreview.innerHTML = ""; // Limpa o que tinha antes
+    areaPreview.innerHTML = ""; 
 
-    // Cria um container para as tabelas que vamos copiar
     const containerTabelas = document.createElement('div');
     containerTabelas.id = "tabelas-para-copiar";
     containerTabelas.style.background = "white";
     containerTabelas.style.padding = "10px";
+    containerTabelas.style.width = "fit-content"; // Garante que a largura se ajuste ao conteúdo ampliado
 
     const ativas = reservasGlobais.filter(r => !r.cancelada);
 
-    // Gera os 5 meses de tabelas (Exatamente como o Mapa View)
     for (let i = 0; i < 5; i++) {
         const df = new Date(hoje.getFullYear(), hoje.getMonth() + i, 1);
-        const tabelaMes = criarTabelaMes(df, ativas, false); // Usamos o modelo visual do mapa
+        const tabelaMes = criarTabelaMes(df, ativas, false);
         
-        // Ajuste visual para caber bem no e-mail
-        tabelaMes.style.marginBottom = "20px";
+        // --- AMPLIAÇÃO PARA LEITURA NO IPHONE ---
+        tabelaMes.style.marginBottom = "30px";
         tabelaMes.style.border = "1px solid #000";
+        tabelaMes.style.width = "1200px"; // Força uma largura maior para não achatar as colunas
+        tabelaMes.style.tableLayout = "fixed";
+
+        // Ajusta todas as células da tabela clonada
+        const celulas = tabelaMes.querySelectorAll('th, td');
+        celulas.forEach(c => {
+            c.style.fontSize = "13px"; // Aumentado de 8.5px para 13px
+            c.style.height = "25px";   // Linhas mais altas para facilitar o toque/leitura
+            c.style.fontFamily = "'Calibri', sans-serif";
+            c.style.fontWeight = "normal";
+        });
+
+        // Destaque para o nome do Apartamento
+        const aptos = tabelaMes.querySelectorAll('.col-apto');
+        aptos.forEach(a => {
+            a.style.width = "150px";
+            a.style.fontWeight = "bold";
+            a.style.fontSize = "14px";
+        });
+
         containerTabelas.appendChild(tabelaMes);
     }
 
     areaPreview.appendChild(containerTabelas);
     
-    // Ajusta o botão do modal
     const btnEnviar = document.querySelector('#modalEmail .btn-salvar');
-    btnEnviar.innerHTML = "📋 COPIAR MAPA E ABRIR GMAIL";
+    btnEnviar.innerHTML = "📋 COPIAR MAPA AMPLIADO E ABRIR GMAIL";
     btnEnviar.onclick = dispararEmailMapa;
     
     document.getElementById('modalEmail').style.display = 'flex';
