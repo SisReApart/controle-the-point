@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel The Point - Gestão Completa</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { --cor-p: #4299e1; --cor-d: #fff700; --cor-vinho: #800020; --cor-borda: #ddd; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; overflow: hidden; } 
@@ -1181,8 +1182,8 @@ async function abrirModuloMapaEmail() {
     const containerTabelas = document.createElement('div');
     containerTabelas.id = "tabelas-para-copiar";
     containerTabelas.style.background = "white";
-    containerTabelas.style.padding = "10px";
-    containerTabelas.style.width = "fit-content"; // Garante que a largura se ajuste ao conteúdo ampliado
+    containerTabelas.style.padding = "20px";
+    containerTabelas.style.width = "fit-content";
 
     const ativas = reservasGlobais.filter(r => !r.cancelada);
 
@@ -1190,27 +1191,23 @@ async function abrirModuloMapaEmail() {
         const df = new Date(hoje.getFullYear(), hoje.getMonth() + i, 1);
         const tabelaMes = criarTabelaMes(df, ativas, false);
         
-        // --- AMPLIAÇÃO PARA LEITURA NO IPHONE ---
         tabelaMes.style.marginBottom = "30px";
         tabelaMes.style.border = "1px solid #000";
-        tabelaMes.style.width = "1200px"; // Força uma largura maior para não achatar as colunas
+        tabelaMes.style.width = "1200px";
         tabelaMes.style.tableLayout = "fixed";
 
-        // Ajusta todas as células da tabela clonada
         const celulas = tabelaMes.querySelectorAll('th, td');
         celulas.forEach(c => {
-            c.style.fontSize = "13px"; // Aumentado de 8.5px para 13px
-            c.style.height = "25px";   // Linhas mais altas para facilitar o toque/leitura
+            c.style.fontSize = "13px";
+            c.style.height = "25px";
             c.style.fontFamily = "'Calibri', sans-serif";
-            c.style.fontWeight = "normal";
+            c.style.color = "black";
         });
 
-        // Destaque para o nome do Apartamento
         const aptos = tabelaMes.querySelectorAll('.col-apto');
         aptos.forEach(a => {
             a.style.width = "150px";
             a.style.fontWeight = "bold";
-            a.style.fontSize = "14px";
         });
 
         containerTabelas.appendChild(tabelaMes);
@@ -1218,9 +1215,12 @@ async function abrirModuloMapaEmail() {
 
     areaPreview.appendChild(containerTabelas);
     
-    const btnEnviar = document.querySelector('#modalEmail .btn-salvar');
-    btnEnviar.innerHTML = "📋 COPIAR MAPA AMPLIADO E ABRIR GMAIL";
-    btnEnviar.onclick = dispararEmailMapa;
+    // --- CRIAÇÃO DOS DOIS BOTÕES DE ENVIO ---
+    const rodapeModal = document.querySelector('#modalEmail .modal-box div[style*="text-align: right"]');
+    rodapeModal.innerHTML = `
+        <button class="btn-salvar" style="background:#38a169; margin-right:10px;" onclick="copiarParaWhatsApp()">📸 COPIAR COMO IMAGEM (WHATSAPP)</button>
+        <button class="btn-salvar" style="background:#3182ce;" onclick="dispararEmailMapa()">✉️ COPIAR PARA GMAIL</button>
+    `;
     
     document.getElementById('modalEmail').style.display = 'flex';
 }
@@ -1250,7 +1250,29 @@ function dispararEmailMapa() {
     
     window.open(gmailLink, '_blank');
 }
-	
+	async function copiarParaWhatsApp() {
+    const alvo = document.getElementById('tabelas-para-copiar');
+    
+    // Tira a "foto" do mapa
+    const canvas = await html2canvas(alvo, {
+        scale: 2, // Aumenta a qualidade da foto
+        backgroundColor: "#ffffff"
+    });
+
+    // Transforma em imagem e coloca no seu Ctrl+V
+    canvas.toBlob(async (blob) => {
+        const item = new ClipboardItem({ "image/png": blob });
+        try {
+            await navigator.clipboard.write([item]);
+            alert("Mapa copiado como IMAGEM! Agora vá ao WhatsApp e use Ctrl+V.");
+            
+            // Abre o WhatsApp opcionalmente (ajuste o número se quiser um específico)
+            window.open('https://web.whatsapp.com/', '_blank');
+        } catch (err) {
+            alert("Erro ao copiar imagem. Tente usar o botão do Gmail.");
+        }
+    });
+}
 </script>
 </body>
 </html>
