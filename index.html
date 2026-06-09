@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel The Point - Gestão Completa</title>
+    <!-- Ícone da Aba (Hotel) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='%2338a169' d='M0 32C0 14.3 14.3 0 32 0H480c17.7 0 32 14.3 32 32V448h16c17.7 0 32 14.3 32 32s-14.3 32-32 32H448V64H64V512H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H48V32zM160 256c17.7 0 32-14.3 32-32s-14.3-32-32-32s-32 14.3-32 32s14.3 32 32 32zm192-32c0-17.7-14.3-32-32-32s-32 14.3-32 32s14.3 32 32 32s32-14.3 32-32zM128 352c0 17.7 14.3 32 32 32h192c17.7 0 32-14.3 32-32s-14.3-32-32-32H160c-17.7 0-32 14.3-32 32z'/></svg>">
+    <!-- Biblioteca de Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -173,7 +177,7 @@
 
 <div class="sidebar">
     <div id="user-info" style="font-size: 10px; color: #718096; margin-bottom: 10px; text-align: right;">Usuário: <b id="nome-logado">...</b></div>
-    <<h2 id="form-titulo">Nova Reserva</h2>
+    <h2 id="form-titulo"><i class="fa-solid fa-hotel"></i> Nova Reserva</h2>
     <input type="hidden" id="edit_id">
     
     <div class="campo" style="display: flex; align-items: center; gap: 8px; background: #fff5f5; padding: 5px; border-radius: 4px; border: 1px solid #feb2b2;">
