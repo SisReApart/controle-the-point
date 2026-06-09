@@ -1179,19 +1179,31 @@ async function abrirModuloMapaEmail() {
     const areaPreview = document.getElementById('preview-email');
     areaPreview.innerHTML = ""; 
 
-    const containerTabelas = document.createElement('div');
-    containerTabelas.id = "tabelas-para-copiar";
-    containerTabelas.style.background = "white";
-    containerTabelas.style.padding = "20px";
-    containerTabelas.style.width = "fit-content";
+    // 1. CALCULA O TOTAL DE MESES (Igual ao Mapa View)
+    let dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    let dataUltima = new Date();
+    reservasGlobais.forEach(r => { 
+        if(new Date(r.data_checkout) > dataUltima) dataUltima = new Date(r.data_checkout); 
+    });
+    
+    let totalMeses = (dataUltima.getFullYear() - dataInicio.getFullYear()) * 12 + (dataUltima.getMonth() - dataInicio.getMonth()) + 1;
+    if(totalMeses < 5) totalMeses = 5; // Garante pelo menos 5 meses
+
+    const containerGeral = document.createElement('div');
+    containerGeral.id = "tabelas-para-copiar";
+    containerGeral.style.background = "white";
+    containerGeral.style.padding = "20px";
+    containerGeral.style.width = "1240px"; // Largura fixa para manter a proporção na foto
 
     const ativas = reservasGlobais.filter(r => !r.cancelada);
 
-    for (let i = 0; i < 5; i++) {
-        const df = new Date(hoje.getFullYear(), hoje.getMonth() + i, 1);
+    // 2. GERA OS GRUPOS DE 5 MESES
+    for (let i = 0; i < totalMeses; i++) {
+        const df = new Date(dataInicio.getFullYear(), dataInicio.getMonth() + i, 1);
         const tabelaMes = criarTabelaMes(df, ativas, false);
         
-        tabelaMes.style.marginBottom = "30px";
+        // Estilização para o e-mail/foto
+        tabelaMes.style.marginBottom = "2px";
         tabelaMes.style.border = "1px solid #000";
         tabelaMes.style.width = "1200px";
         tabelaMes.style.tableLayout = "fixed";
@@ -1202,6 +1214,7 @@ async function abrirModuloMapaEmail() {
             c.style.height = "25px";
             c.style.fontFamily = "'Calibri', sans-serif";
             c.style.color = "black";
+            c.style.border = "1px solid black";
         });
 
         const aptos = tabelaMes.querySelectorAll('.col-apto');
@@ -1210,12 +1223,23 @@ async function abrirModuloMapaEmail() {
             a.style.fontWeight = "bold";
         });
 
-        containerTabelas.appendChild(tabelaMes);
+        containerGeral.appendChild(tabelaMes);
+
+        // A cada 5 meses, adiciona uma separação visual de "Página"
+        if ((i + 1) % 5 === 0 && (i + 1) < totalMeses) {
+            const separador = document.createElement('div');
+            separador.style.height = "40px";
+            separador.style.borderBottom = "2px dashed #ccc";
+            separador.style.marginBottom = "40px";
+            separador.style.textAlign = "center";
+            separador.style.color = "#999";
+            separador.innerText = "--- QUEBRA DE PÁGINA ---";
+            containerGeral.appendChild(separador);
+        }
     }
 
-    areaPreview.appendChild(containerTabelas);
+    areaPreview.appendChild(containerGeral);
     
-    // --- CRIAÇÃO DOS DOIS BOTÕES DE ENVIO ---
     const rodapeModal = document.querySelector('#modalEmail .modal-box div[style*="text-align: right"]');
     rodapeModal.innerHTML = `
         <button class="btn-salvar" style="background:#38a169; margin-right:10px;" onclick="copiarParaWhatsApp()">📸 COPIAR COMO IMAGEM (WHATSAPP)</button>
