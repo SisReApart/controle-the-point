@@ -1179,7 +1179,6 @@ async function abrirModuloMapaEmail() {
     const areaPreview = document.getElementById('preview-email');
     areaPreview.innerHTML = ""; 
 
-    // 1. CALCULA O TOTAL DE MESES (Igual ao Mapa View)
     let dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     let dataUltima = new Date();
     reservasGlobais.forEach(r => { 
@@ -1187,53 +1186,72 @@ async function abrirModuloMapaEmail() {
     });
     
     let totalMeses = (dataUltima.getFullYear() - dataInicio.getFullYear()) * 12 + (dataUltima.getMonth() - dataInicio.getMonth()) + 1;
-    if(totalMeses < 5) totalMeses = 5; // Garante pelo menos 5 meses
+    if(totalMeses < 5) totalMeses = 5;
 
     const containerGeral = document.createElement('div');
     containerGeral.id = "tabelas-para-copiar";
     containerGeral.style.background = "white";
     containerGeral.style.padding = "20px";
-    containerGeral.style.width = "1240px"; // Largura fixa para manter a proporção na foto
+    containerGeral.style.width = "1050px"; // Largura aproximada do papel Letter Paisagem
 
     const ativas = reservasGlobais.filter(r => !r.cancelada);
 
-    // 2. GERA OS GRUPOS DE 5 MESES
     for (let i = 0; i < totalMeses; i++) {
         const df = new Date(dataInicio.getFullYear(), dataInicio.getMonth() + i, 1);
-        const tabelaMes = criarTabelaMes(df, ativas, false);
         
-        // Estilização para o e-mail/foto
+        // MUDANÇA: Agora usamos 'true' para ativar o layout de impressão (Nome do mês dentro da tabela)
+        const tabelaMes = criarTabelaMes(df, ativas, true);
+        
+        // --- APLICAÇÃO DO LAYOUT IDÊNTICO AO MAPA VIEW ---
         tabelaMes.style.marginBottom = "2px";
-        tabelaMes.style.border = "1px solid #000";
-        tabelaMes.style.width = "1200px";
+        tabelaMes.style.border = "1px solid black";
+        tabelaMes.style.width = "100%";
         tabelaMes.style.tableLayout = "fixed";
+        tabelaMes.style.borderCollapse = "collapse";
 
+        // Estilização das células exatamente como no CSS de Impressão
         const celulas = tabelaMes.querySelectorAll('th, td');
         celulas.forEach(c => {
-            c.style.fontSize = "13px";
-            c.style.height = "25px";
+            c.style.border = "1px solid black";
+            c.style.height = "17px";
+            c.style.lineHeight = "17px";
+            c.style.fontSize = "8.5px";
             c.style.fontFamily = "'Calibri', sans-serif";
             c.style.color = "black";
-            c.style.border = "1px solid black";
+            c.style.padding = "0";
+            c.style.textAlign = "center";
+            
+            // Remove negrito das reservas conforme regra anterior
+            if(c.classList.contains('reserva-p') || c.classList.contains('reserva-d')) {
+                c.style.fontWeight = "normal";
+            }
         });
 
-        const aptos = tabelaMes.querySelectorAll('.col-apto');
-        aptos.forEach(a => {
-            a.style.width = "150px";
+        // Estilo dos Cabeçalhos (Cinza e Branco como no Mapa View)
+        tabelaMes.querySelectorAll('.cabecalho-dias').forEach(el => el.style.background = "#eeeeee");
+        tabelaMes.querySelectorAll('.cabecalho-semana').forEach(el => el.style.background = "#ffffff");
+        tabelaMes.querySelectorAll('.print-month-name').forEach(el => {
+            el.style.fontSize = "10px";
+            el.style.fontWeight = "bold";
+        });
+
+        // Estilo da coluna de Apartamentos
+        tabelaMes.querySelectorAll('.col-apto').forEach(a => {
+            a.style.width = "140px";
+            a.style.fontSize = "11px";
             a.style.fontWeight = "bold";
+            a.style.textAlign = "left";
+            a.style.paddingLeft = "4px";
         });
 
         containerGeral.appendChild(tabelaMes);
 
-        // A cada 5 meses, adiciona uma separação visual de "Página"
+        // Quebra de página a cada 5 meses
         if ((i + 1) % 5 === 0 && (i + 1) < totalMeses) {
             const separador = document.createElement('div');
-            separador.style.height = "40px";
-            separador.style.borderBottom = "2px dashed #ccc";
-            separador.style.marginBottom = "40px";
-            separador.style.textAlign = "center";
-            separador.style.color = "#999";
-            separador.innerText = "--- QUEBRA DE PÁGINA ---";
+            separador.style.height = "30px";
+            separador.style.borderBottom = "1px dashed #000";
+            separador.style.marginBottom = "30px";
             containerGeral.appendChild(separador);
         }
     }
