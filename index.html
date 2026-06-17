@@ -344,6 +344,8 @@
             <tbody id="corpo-pagos"></tbody>
         </table>
         <div id="total-pagos" class="resumo-pagos">Total Recebido no Mês: R$ 0,00</div>
+        <div id="total-tax" class="resumo-pagos" style="margin-top: 5px; background: #fffaf0; border-color: #ed8936;">Total Tax 6%: R$ 0,00</div>
+        <div id="total-due" class="resumo-pagos" style="margin-top: 5px; background: #f0fff4; border-color: #48bb78;">Total Amount Due: R$ 0,00</div>
     </div>
 </div>
 <!-- MODAL GERENCIAMENTO DE USUÁRIOS (SÓ MASTER) -->
@@ -1078,7 +1080,11 @@ function renderRelatorioPagos() {
             </tr>`;
     });
     document.getElementById('total-pagos').innerText = `Total Recebido no Mês: R$ ${totalGeral.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    if(pagas.length === 0) {
+    const totalTax = totalGeral * 0.06;
+    const totalDue = totalTax - 15.00;
+    document.getElementById('total-tax').innerText = `Total Tax 6%: R$ ${totalTax.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('total-due').innerText = `Total Amount Due: R$ ${totalDue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+	if(pagas.length === 0) {
         corpo.innerHTML = "<tr><td colspan='6' style='padding:20px; text-align:center;'>Nenhum pagamento registrado neste mês.</td></tr>";
     }
 }
