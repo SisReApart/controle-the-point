@@ -1080,11 +1080,16 @@ function renderRelatorioPagos() {
             </tr>`;
     });
     document.getElementById('total-pagos').innerText = `Total Recebido no Mês: R$ ${totalGeral.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    
+    // Cálculos Adicionais
     const totalTax = totalGeral * 0.06;
     const totalDue = totalTax - 15.00;
+    
+    // Escrevendo na tela
     document.getElementById('total-tax').innerText = `Total Tax 6%: R$ ${totalTax.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
     document.getElementById('total-due').innerText = `Total Amount Due: R$ ${totalDue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-	if(pagas.length === 0) {
+
+    if(pagas.length === 0) {
         corpo.innerHTML = "<tr><td colspan='6' style='padding:20px; text-align:center;'>Nenhum pagamento registrado neste mês.</td></tr>";
     }
 }
