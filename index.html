@@ -343,8 +343,9 @@
             </thead>
             <tbody id="corpo-pagos"></tbody>
         </table>
-        <div id="total-pagos" class="resumo-pagos">Total Recebido no Mês: R$ 0,00</div>
+        <div id="total-pagos" class="resumo-pagos">Total Received in the Month: R$ 0,00</div>
         <div id="total-tax" class="resumo-pagos" style="margin-top: 5px; background: #fffaf0; border-color: #ed8936;">Total Tax 6%: R$ 0,00</div>
+        <div id="total-allowance" class="resumo-pagos" style="margin-top: 5px; background: #fdf2f2; border-color: #f87171;">Less - Collection Allowance: R$ 0,00</div>
         <div id="total-due" class="resumo-pagos" style="margin-top: 5px; background: #f0fff4; border-color: #48bb78;">Total Amount Due: R$ 0,00</div>
     </div>
 </div>
@@ -1082,12 +1083,16 @@ function renderRelatorioPagos() {
     document.getElementById('total-pagos').innerText = `Total Recebido no Mês: R$ ${totalGeral.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
     
     // Cálculos Adicionais
-    const totalTax = totalGeral * 0.06;
-    const totalDue = totalTax - 15.00;
-    
-    // Escrevendo na tela
-    document.getElementById('total-tax').innerText = `Total Tax 6%: R$ ${totalTax.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-    document.getElementById('total-due').innerText = `Total Amount Due: R$ ${totalDue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    // Cálculos com arredondamento para cima (2 casas decimais)
+    const totalTax = Math.ceil((totalGeral * 0.06) * 100) / 100;
+    const totalAllowance = Math.ceil((totalGeral * 0.0015) * 100) / 100;
+    const totalDue = totalTax - totalAllowance;
+
+    // Escrevendo na tela com formatação correta (2 casas decimais)
+    document.getElementById('total-pagos').innerText = `Total Received in the Month: R$ ${totalGeral.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    document.getElementById('total-tax').innerText = `Total Tax 6%: R$ ${totalTax.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    document.getElementById('total-allowance').innerText = `Less - Collection Allowance: R$ ${totalAllowance.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    document.getElementById('total-due').innerText = `Total Amount Due: R$ ${totalDue.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
     if(pagas.length === 0) {
         corpo.innerHTML = "<tr><td colspan='6' style='padding:20px; text-align:center;'>Nenhum pagamento registrado neste mês.</td></tr>";
