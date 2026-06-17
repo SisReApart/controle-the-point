@@ -193,6 +193,12 @@
         <div class="campo" style="flex: 1;"><label>Adultos</label><input type="number" id="num_adultos" value="3"></div>
     </div>
 
+	<!-- NOVO CAMPO: DATA DE CRIAÇÃO -->
+    <div class="campo">
+        <label>Data de Criação</label>
+        <input type="date" id="data_criacao">
+    </div>
+
     <!-- Linha: Check-in e Check-out -->
     <div style="display: flex; gap: 5px;">
         <div class="campo" style="flex: 1;"><label>Check-In *</label><input type="date" id="data_checkin" onchange="sincronizarCheckOut(); verificarReserva()"></div>
@@ -304,7 +310,8 @@
         <table class="tab-hist">
             <thead>
                 <tr>
-                    <th>Check-in</th>
+                    <th>Criação</th>
+					<th>Check-in</th>
                     <th>Hóspede</th>
                     <th>Apto</th>
                     <th>Check-out</th>
@@ -486,6 +493,7 @@
         if (config) minNoites = parseInt(config.valor);
         
         aplicarPermissoes(); 
+		document.getElementById('data_criacao').value = new Date().toISOString().split('T')[0];
         renderizarMapaTriplo();
     }
 
@@ -805,6 +813,7 @@
         const r = {
             apto_id: document.getElementById('apto_id').value, 
             guest_principal: document.getElementById('guest_principal').value,
+			data_criacao: document.getElementById('data_criacao').value || null,
             data_checkin: cin || null, 
             data_checkout: document.getElementById('data_checkout').value || null,
             origem: document.getElementById('origem').value, 
@@ -815,7 +824,7 @@
             cancelada: document.getElementById('cancelada').checked, 
             valor_creditado: document.getElementById('valor_creditado').value || 0,
             data_credito: document.getElementById('data_credito').value || null, 
-            valor_comissao: document.getElementById('valor_comissao').value || 0,
+            valor_comissao: parseFloat(document.getElementById('valor_comissao').value) || 0,
             data_comissao: document.getElementById('data_comissao').value || null, 
             usuario_alterou: userLogado.usuario, 
             data_alteracao: new Date().toISOString(),
@@ -988,7 +997,8 @@ function renderConferencia() {
         const aptoNome = aptosGlobais.find(a => a.id === r.apto_id)?.nome_apto || "N/A";
         corpo.innerHTML += `
             <tr>
-                <td>${new Date(r.data_checkin + "T12:00:00").toLocaleDateString('pt-BR')}</td>
+                <td>${r.data_criacao ? new Date(r.data_criacao + "T12:00:00").toLocaleDateString('pt-BR') : "---"}</td>
+				<td>${new Date(r.data_checkin + "T12:00:00").toLocaleDateString('pt-BR')}</td>
                 <td>${r.guest_principal}</td>
                 <td>${aptoNome}</td>
                 <td>${new Date(r.data_checkout + "T12:00:00").toLocaleDateString('pt-BR')}</td>
