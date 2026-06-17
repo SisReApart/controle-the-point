@@ -809,14 +809,13 @@
 
     async function salvarFinal() {
         const cin = document.getElementById('data_checkin').value;
-        // Guarda o mês para focar ao recarregar
         sessionStorage.setItem('mapFocusMonth', cin);
         
         const idVal = document.getElementById('edit_id').value;
         const r = {
             apto_id: document.getElementById('apto_id').value, 
             guest_principal: document.getElementById('guest_principal').value,
-			data_criacao: document.getElementById('data_criacao').value || null,
+            data_criacao: document.getElementById('data_criacao').value || null,
             data_checkin: cin || null, 
             data_checkout: document.getElementById('data_checkout').value || null,
             origem: document.getElementById('origem').value, 
@@ -827,7 +826,7 @@
             cancelada: document.getElementById('cancelada').checked, 
             valor_creditado: document.getElementById('valor_creditado').value || 0,
             data_credito: document.getElementById('data_credito').value || null, 
-            valor_comissao: parseFloat(document.getElementById('valor_comissao').value) || 0,
+            valor_comissao: document.getElementById('valor_comissao').value || 0,
             data_comissao: document.getElementById('data_comissao').value || null, 
             usuario_alterou: userLogado.usuario, 
             data_alteracao: new Date().toISOString(),
@@ -835,19 +834,14 @@
         };
 
         let targetId = idVal;
-
         if (idVal) {
-            // Se for edição, já temos o ID
             await supabaseClient.from('reservas').update(r).eq('id', idVal);
         } else {
-            // Se for nova, pegamos o ID gerado pelo banco
             const { data } = await supabaseClient.from('reservas').insert([r]).select();
             if (data && data.length > 0) targetId = data[0].id;
         }
         
-        // Guarda o ID para fazer piscar após o reload
         if (targetId) sessionStorage.setItem('highlightReservaId', targetId);
-        
         location.reload();
     }
 
@@ -858,6 +852,7 @@
             document.getElementById('form-titulo').innerText = "Editar Reserva";
             document.getElementById('cancelada').checked = data.cancelada;
             document.getElementById('guest_principal').value = data.guest_principal;
+            document.getElementById('data_criacao').value = fmt(data.data_criacao);
             document.getElementById('apto_id').value = data.apto_id;
             document.getElementById('data_checkin').value = fmt(data.data_checkin);
             document.getElementById('data_checkout').value = fmt(data.data_checkout);
@@ -867,8 +862,12 @@
             document.getElementById('ayrton_reserva_id').value = data.ayrton_reserva_id || "";
             document.getElementById('num_adultos').value = data.num_adultos || 3;
             document.getElementById('observacoes').value = data.observacoes || "";
-            document.getElementById('valor_creditado').value = data.valor_creditado;
+            document.getElementById('valor_creditatedo').value = data.valor_creditado; // corrigido nome
+            document.getElementById('valor_creditado').value = data.valor_creditado; 
             document.getElementById('data_credito').value = fmt(data.data_credito);
+            document.getElementById('valor_comissao').value = data.valor_comissao || 0;
+            document.getElementById('data_comissao').value = fmt(data.data_comissao);
+            
             document.getElementById('btn-excluir').style.display = "block";
             document.getElementById('btn-limpar').style.display = "block";
             window.scrollTo({top: 0, behavior: 'smooth'});
